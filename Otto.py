@@ -27,18 +27,20 @@ class Otto:
 
         when_expr = WHEN.suppress() + Group(trigger)("when")
         then_clause = THEN.suppress() + Group(OneOrMore(command))("actions")
-        conditionclause = group(condition)("conditions") + then_clause("then")
-        parser = when_expr + Group(OneOrMore(group(conditionclause)))("condition_clauses")
+        conditionclause = condition("conditions") + then_clause
+        parser = when_expr + OneOrMore(Group(conditionclause))("condition_clauses")
         return parser
 
     def add(self,script):
         automation = self.parser.parse_string(script)
 
         @state_trigger(str(automation.when[0]), **automation.when[0].kwargs)
-        @task_unique(f"ottomation_{str(automation.when[0]}")
+        @task_unique(f"ottomation_{str(automation.when[0])}")
         def ottomation():
             nonlocal automation
             for clause in automation.condition_clauses:
-                if clause.conditions.value == True:
-                    for command in clause.then.actions:
+                if clause.conditions[0].value == True:
+                    for command in clause.actions:
                         command.run()
+
+        return ottomation
