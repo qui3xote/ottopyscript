@@ -1,7 +1,7 @@
 from pyparsing import *
 
-# if "/config/otto" not in sys.path:
-#     sys.path.append("/config/otto")
+if "/config/otto" not in sys.path:
+     sys.path.append("/config/ottolib")
 
 from ottolib import *
 
@@ -28,8 +28,8 @@ class Otto:
         when_expr = WHEN.suppress() + Group(trigger)("when")
         then_clause = THEN.suppress() + Group(OneOrMore(command))("actions")
         conditionclause = condition("conditions") + then_clause
-        parser = when_expr + OneOrMore(Group(conditionclause))("condition_clauses")
-        return parser
+        ottoparser = when_expr + OneOrMore(Group(conditionclause))("condition_clauses")
+        return ottoparser
 
     def add(self,script):
         automation = self.parser.parse_string(script)
