@@ -1,16 +1,16 @@
 import os
 import asyncio
-
-if "/config/otto" not in sys.path:
-     sys.path.append("/config/ottolib")
-
-from ottolib import parser
-from interpreter import PyscriptInterpreter
-
-SHOW_TASK_NAME = False
-DEBUG_AS_INFO = False
-
-registered_triggers = []
+#
+# if "/config/otto" not in sys.path:
+#      sys.path.append("/config/ottolib")
+#
+# from ottolib import parser
+# from interpreter import PyscriptInterpreter
+#
+# SHOW_TASK_NAME = False
+# DEBUG_AS_INFO = False
+#
+# registered_triggers = []
 
 class Otto:
     def __init__(self):
@@ -48,13 +48,14 @@ class Otto:
             return False
 
         if not os.path.isfile(self.script_dir):
+            pass
 
 
 #####Helpers
-@pyscript_compile
-def fileexists(path):
-    return os.path.isfile(path)
-
-@pyscript_compile
-def filelist(path):
-    return os.path.isfile(path)
+# @pyscript_compile
+# def fileexists(path):
+#     return os.path.isfile(path)
+#
+# @pyscript_compile
+# def filelist(path):
+#     return os.path.isfile(path)

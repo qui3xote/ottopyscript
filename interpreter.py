@@ -3,7 +3,7 @@ class PyscriptInterpreter:
     def __init__(self):
         pass
 
-    def set_state(self, entity_name, value=None, new_attributes=None, kwargs):
+    def set_state(self, entity_name, value=None, new_attributes=None, kwargs=None):
         try:
             state.set(entity_name, value, new_attributes, **kwargs)
             return True
@@ -93,6 +93,23 @@ class PyscriptInterpreter:
             else:
                 func(*args,**kwargs)
 
+    def add_automation(self, script):
+        automation = self.parser().parse_string(script)
+
+        ifthens = []
+
+        for conditions, commands in automation.condition_clauses.as_list():
+            ifthens.append([conditions.eval(), [command.eval() for command in commands]])
+
+        @state_trigger(f"{str(automation.when[0])}")
+        def otto():
+            nonlocal ifthens
+            for conditions, commands in ifthens:
+                if self.eval_tree(conditions) == True:
+                    for command in commands:
+                        self.eval(command)
+                else:
+                    self.log("conditions failed","info")
 
 
 
@@ -101,8 +118,8 @@ class TestInterpreter:
     def __init__(self):
         pass
 
-    def set_state(self, entity_name, value=None, new_attributes=None, kwargs):
-        self.log_info"state.set(entity_name={entity_name}, \
+    def set_state(self, entity_name, value=None, new_attributes=None, kwargs=None):
+        self.log_info("state.set(entity_name={entity_name}, \
                             value={value}, \
                             new_attributes={new_attributes}, \
                             kwargs = **{kwargs})")
@@ -146,6 +163,26 @@ class TestInterpreter:
         result = tree['opfunc'](statements)
         self.log(f"{result}: {tree}")
         return result
+
+    def add_automation(self, script):
+        automation = self.parser().parse_string(script)
+
+        ifthens = []
+
+        for conditions, commands in automation.condition_clauses.as_list():
+            ifthens.append([conditions.eval(), [command.eval() for command in commands]])
+
+        trigger = f"state_trigger({str(automation.when[0])})"
+
+        def otto():
+            nonlocal ifthens
+            for conditions, commands in ifthens:
+                if self.eval_tree(conditions) == True:
+                    for command in commands:
+                        self.eval(command)
+                else:
+                    self.log("conditions failed","info")
+        return ()
 
     def log_info(self, message):
         print(f'INFO: {message}')
