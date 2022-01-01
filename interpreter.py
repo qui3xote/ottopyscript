@@ -1,7 +1,7 @@
 class PyscriptInterpreter:
 
     def __init__(self):
-        pass
+        self.log_id = 'none'
 
     def set_state(self, entity_name, value=None, new_attributes=None, kwargs=None):
         try:
@@ -62,54 +62,20 @@ class PyscriptInterpreter:
         return result
 
     def log_info(self, message):
-        log.info(f'{self.log_id()}: {message}')
+        log.info(f'{self.log_id}: {message}')
 
     def log_error(self, message):
-        log.error(f'{self.log_id()}: {message}')
+        log.error(f'{self.log_id}: {message}')
 
     def log_warning(self, message):
-        log.warning(f'{self.log_id()}: {message}')
+        log.warning(f'{self.log_id}: {message}')
 
     def log_debug(self, message):
         if DEBUG_AS_INFO:
-            log.info(f'{self.log_id()} DEBUG: {message}')
+            log.info(f'{self.log_id} DEBUG: {message}')
         else:
-            log.debug(f'{self.log_id()}: {message}')
+            log.debug(f'{self.log_id}: {message}')
 
-    def eval(self, operations):
-        for op in operations:
-            self.log(f'Operation: {type(op)}, {op}')
-            func = op['opfunc']
-            args = op['args'] if 'args' in op.keys() else []
-            kwargs = op['kwargs'] if 'kwargs' in op.keys() else {}
-
-            if callable(func) == False:
-                try:
-                    func = getattr(self, func)
-                except:
-                    self.log(f"No such function {func}")
-                    return
-                func(args,kwargs)
-            else:
-                func(*args,**kwargs)
-
-    def add_automation(self, script):
-        automation = self.parser().parse_string(script)
-
-        ifthens = []
-
-        for conditions, commands in automation.condition_clauses.as_list():
-            ifthens.append([conditions.eval(), [command.eval() for command in commands]])
-
-        @state_trigger(f"{str(automation.when[0])}")
-        def otto():
-            nonlocal ifthens
-            for conditions, commands in ifthens:
-                if self.eval_tree(conditions) == True:
-                    for command in commands:
-                        self.eval(command)
-                else:
-                    self.log("conditions failed","info")
 
 
 
