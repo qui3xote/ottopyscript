@@ -18,20 +18,26 @@ class Otto:
             log.error(f'INVALID CONFIG {config}')
             return
 
-    def log_info(self, message):
-        log.info(f'{self.log_id()}: {message}')
 
-    def log_error(self, message):
-        log.error(f'{self.log_id()}: {message}')
+    def add(self, script):
+        automation = self.parser().parse_string(script)
 
-    def log_warning(self, message):
-        log.warning(f'{self.log_id()}: {message}')
+        ifthens = []
 
-    def log_debug(self, message):
-        if DEBUG_AS_INFO:
-            log.info(f'{self.log_id()} DEBUG: {message}')
-        else:
-            log.debug(f'{self.log_id()}: {message}')
+        for conditions, commands in automation.condition_clauses.as_list():
+            ifthens.append([conditions.eval(), [command.eval() for command in commands]])
+
+        @state_trigger(f"{str(automation.when[0])}")
+        def otto():
+            nonlocal ifthens
+            for conditions, commands in ifthens:
+                if self.eval_tree(conditions) == True:
+                    for command in commands:
+                        self.eval(command)
+                else:
+                    self.log("conditions failed","info")
+
+        return otto
 
     def parse_config(self, data):
     # TODO: use voluptuous
