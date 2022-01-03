@@ -63,7 +63,7 @@ def get_files(path):
 
 @pyscript_compile
 def load_file(path):
-    with open('readme.txt') as f:
+    with open(path) as f:
         contents = f.read()
 
     return contents
