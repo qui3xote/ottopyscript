@@ -46,7 +46,7 @@ class OttoBuilder:
                 self._files = task.executor(get_files, path)
             except:
                 log.error(f'Unable to read files from {path}')
-                return false
+                return False
 
 ####Helpers
 @pyscript_compile
