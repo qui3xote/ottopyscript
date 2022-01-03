@@ -57,13 +57,16 @@ def fileexists(path):
 
 @pyscript_compile
 def get_files(path):
-    files = [os.path.join(path,f) for f in os.listdir(path) if isfile(os.path.join(path, f))]
+    files = [os.path.join(path,f) for f in os.listdir(path) if os.isfile(os.path.join(path, f))]
     return files
 
 @pyscript_compile
-def load_files(path):
-    files = [os.path.join(path,f) for f in os.listdir(path) if isfile(os.path.join(path, f))]
-    return files
+def load_file(path):
+    with open('readme.txt') as f:
+        contents = f.read()
+
+    return contents
+
 
 # @pyscript_compile
 # def walk_directory(path):
