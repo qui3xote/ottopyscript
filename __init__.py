@@ -36,7 +36,7 @@ class OttoBuilder:
                 registered_triggers.append(intrprt.build_func(), parsed)
 
 
-    def self.parse_config(self, data):
+    def parse_config(self, data):
         path = data.get('directory')
         if path is None:
             log.error('Script directory is required')
