@@ -1,0 +1,4 @@
+pyscript:
+  apps:
+    otto:
+      - directory: /config/ottoscript/*

@@ -130,9 +130,7 @@ class TestInterpreter:
         self.log(f"{result}: {tree}")
         return result
 
-    def add_automation(self, script):
-        automation = self.parser().parse_string(script)
-
+    def build_func(self, automation):
         ifthens = []
 
         for conditions, commands in automation.condition_clauses.as_list():
@@ -140,7 +138,7 @@ class TestInterpreter:
 
         trigger = f"state_trigger({str(automation.when[0])})"
 
-        def otto():
+        def automation_func():
             nonlocal ifthens
             for conditions, commands in ifthens:
                 if self.eval_tree(conditions) == True:
@@ -148,7 +146,7 @@ class TestInterpreter:
                         self.eval(command)
                 else:
                     self.log("conditions failed","info")
-        return ()
+        return automation_func
 
     def log_info(self, message):
         print(f'INFO: {message}')
