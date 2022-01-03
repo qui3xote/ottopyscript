@@ -29,7 +29,7 @@ class OttoBuilder:
 
         for f in self._files:
             log.info(f'Reading {f}')
-            scripts = task.executor(load_file(f))
+            scripts = task.executor(load_file, f)
             for script in scripts.split(";"):
                 intrprt = interpreter()
                 parser = OttoParser(intrprt)
