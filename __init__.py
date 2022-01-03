@@ -29,7 +29,7 @@ class OttoBuilder:
 
         for f in self._files:
             scripts = task.executor(load_file(f))
-            for script in scripts.split.";":
+            for script in scripts.split(";"):
                 intrprt = interpreter()
                 parser = OttoParser(intrprt)
                 parsed = parser.parse(script)
