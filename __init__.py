@@ -57,7 +57,7 @@ def fileexists(path):
 
 @pyscript_compile
 def get_files(path):
-    files = [os.path.join(path,f) for f in os.listdir(path) if os.isfile(os.path.join(path, f))]
+    files = [os.path.join(path,f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     return files
 
 @pyscript_compile
