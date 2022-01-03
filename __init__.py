@@ -28,6 +28,7 @@ class OttoBuilder:
             return
 
         for f in self._files:
+            log.info('Reading {f}')
             scripts = task.executor(load_file(f))
             for script in scripts.split(";"):
                 intrprt = interpreter()
