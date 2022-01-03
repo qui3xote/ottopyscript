@@ -2,7 +2,7 @@ import sys
 import os
 import asyncio
 from pyparsing import *
-from interpreter import TestInterpreter, PyscriptInterpreter
+from pyscriptotto.interpreter import TestInterpreter, PyscriptInterpreter
 
 
 SHOW_TASK_NAME = False
