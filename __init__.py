@@ -1,9 +1,9 @@
 import sys
 import os
+from importlib import reload
 import asyncio
 from pyparsing import *
 from ottopyscript.interpreter import TestInterpreter, PyscriptInterpreter
-
 
 SHOW_TASK_NAME = False
 DEBUG_AS_INFO = True
@@ -17,7 +17,11 @@ else:
     sys.path.append("/config/ottolib")
     interpreter = PyscriptInterpreter
 
-from ottolib import OttoParser
+if 'ottolib' in sys.modules:
+    import ottolib
+    reload(ottolib)
+
+from ottolib import OttoScript
 
 registered_triggers = []
 
@@ -31,16 +35,15 @@ class OttoBuilder:
             log.info(f'Reading {f}')
             scripts = task.executor(load_file, f)
             for script in scripts.split(";"):
-                intrprt = interpreter()
-                parser = OttoParser(intrprt)
-                parsed = parser.parse(script)
-                registered_triggers.append(intrprt.build_func(), parsed)
+                log.info(f"{script}")
+                automation = OttoScript(interpreter(f), script)
+                registered_triggers.append(self.build_automation(automation))
 
 
     def parse_config(self, data):
         path = data.get('directory')
         if path is None:
-            log.error('Script directory is required')
+            log.error("Script directory is required")
             return False
         else:
             try:
@@ -50,8 +53,17 @@ class OttoBuilder:
                 log.error(f'Unable to read files from {path}')
                 return False
 
+    def build_automation(self, automation):
+        @state_trigger(f"{automation.trigger}")
+        def automation_func():
+            nonlocal automation
+            log.info(f"Running {type(automation)}")
+            automation.execute()
 
-####Helpers
+        return automation_func
+
+
+########################   Helpers #############################
 @pyscript_compile
 def fileexists(path):
     return os.path.isfile(path)
@@ -67,37 +79,6 @@ def load_file(path):
         contents = f.read()
 
     return contents
-
-
-# @pyscript_compile
-# def walk_directory(path):
-#     # TODO: Add globals support (directory based inheritance)
-#     script_list = []
-#     try:
-#         for dirpath, dirnames, filenames in os.walk(path):
-#             if 'globals.otto' in filenames:
-#                 filenames.pop('globals.otto')
-#                 ottoglobals = os.path.join(dirpath, 'globals.otto')
-#             else:
-#                 ottoglobals = None
-#             for f in filenames:
-#                 filepath = os.path.join(dirpath, f)
-#                 script_list.append({'globals': ottoglobals}, filepath)
-
-######## What to do ###########
-# Startup - fetch config, check it. If bad, fail.
-# If good, get directory(ies?) of apps(name?)
-# Read all files - split on semicolon, pass each to Otto
-
-########## Config ############
-#files: list of files, directories, path
-#prefix: by default, otto uses {filename}_{automationname} for naming functions
-#postfix: ''
-# the prefix & postfix {filename_} can be overridden with plain text or macros:
-# {directory}, {filename}, {fullpath}
-# shared:
-#   file: globals.otto
-#
 
 @time_trigger('startup')
 def startup():
