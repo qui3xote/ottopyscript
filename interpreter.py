@@ -1,4 +1,4 @@
-from ottolib import *
+from ottoscript import *
 
 class PyscriptInterpreter:
 
