@@ -2,6 +2,7 @@ import sys
 import os
 from importlib import reload
 import asyncio
+import pathlib
 from pyparsing import *
 from ottopyscript.interpreter import TestInterpreter, PyscriptInterpreter
 
@@ -70,7 +71,11 @@ def fileexists(path):
 
 @pyscript_compile
 def get_files(path):
-    files = [os.path.join(path,f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    files = []
+    for f in os.listdir(path):
+        if os.path.isfile(os.path.join(path, f)):
+            if pathlib.Path(f).suffix = '.otto':
+                files.append(os.path.join(path, f))
     return files
 
 @pyscript_compile
