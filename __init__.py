@@ -11,18 +11,18 @@ DEBUG_AS_INFO = True
 
 if sys.executable == '/usr/local/Cellar/jupyterlab/3.2.4/libexec/bin/python3.9':
     ENVIRONMENT = 'DEV'
-    sys.path.append("./ottolib")
+    sys.path.append("./ottoscript")
     interpreter = TestInterpreter
 else:
     ENVIRONMENT = 'PROD'
-    sys.path.append("/config/ottolib")
+    sys.path.append("/config/ottoscript")
     interpreter = PyscriptInterpreter
 
-if 'ottolib' in sys.modules:
-    import ottolib
-    reload(ottolib)
+if 'ottoscript' in sys.modules:
+    import ottoscript
+    reload(ottoscript)
 
-from ottolib import OttoScript
+from ottoscript import OttoScript
 
 registered_triggers = []
 
