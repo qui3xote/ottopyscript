@@ -74,7 +74,7 @@ def get_files(path):
     files = []
     for f in os.listdir(path):
         if os.path.isfile(os.path.join(path, f)):
-            if pathlib.Path(f).suffix = '.otto':
+            if pathlib.Path(f).suffix == '.otto':
                 files.append(os.path.join(path, f))
     return files
 
