@@ -4,7 +4,7 @@ from importlib import reload
 import asyncio
 import pathlib
 from pyparsing import *
-from ottopyscript.interpreter import TestInterpreter, PyscriptInterpreter
+from ottopyscript.interpreter import PyscriptInterpreter
 
 SHOW_TASK_NAME = False
 DEBUG_AS_INFO = True
