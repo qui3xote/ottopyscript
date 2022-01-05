@@ -38,13 +38,13 @@ OttoScript will support area-based entity shorthand. For example,
 OttoScript is designed to scale to highly complex
 automations and offers features for power users
 such as:
- - variable assignment ('set @color = 'red')
  - complex conditions ('if sun is down and porch.lights != 'on')
 
 _Future Release_:
+- variable assignment ('set @color = 'red')
 - Advanced logic (CASE, FOR loops)
- - user-defined functions for frequently used code
- - Ability to call pyscript functions directly from OttoScripts
+- user-defined functions for frequently used code
+- Ability to call pyscript functions directly from OttoScripts
 
 
 ## Installation
