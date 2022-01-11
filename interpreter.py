@@ -1,23 +1,27 @@
-from ottoscript import *
-
 class PyscriptInterpreter:
 
-    def __init__(self, log_id=None):
+    def __init__(self, log_id=None, debug_as_info=True):
         self.log_id = log_id
 
-    def set_state(self, entity_name, value=None, new_attributes=None, kwargs=None):
+    def set_state(self,
+                  entity_name,
+                  value=None,
+                  new_attributes=None,
+                  kwargs=None):
         try:
             state.set(entity_name, value, new_attributes, **kwargs)
             return True
-        except:
+        except Exception as error:
             self.log_warning(f"Unable to complete operation \
                         state.set(entity_name={entity_name}, \
                         value={value}, \
                         new_attributes={new_attributes}, \
                         kwargs = **{kwargs})")
+            self.log_error(error)
             return False
 
     def get_state(self, entity_name):
+        self.log_debug(f"Getting state of {entity_name}")
         try:
             value = state.get(entity_name)
             return value
