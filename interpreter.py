@@ -33,8 +33,9 @@ class PyscriptInterpreter:
         try:
             service.call(domain, service_name, **kwargs)
             return True
-        except:
+        except Exception as error:
             self.log_warning(f"Unable to complete service.call({domain}, {service_name}, **{kwargs}))")
+            self.log_error(f"{error}")
             return False
 
     def sleep(self,seconds):
