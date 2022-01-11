@@ -1,6 +1,6 @@
 class PyscriptInterpreter:
 
-    def __init__(self, log_id=None, debug_as_info=True):
+    def __init__(self, log_id=None, debug_as_info=False):
         self.log_id = log_id
         self.debug_as_info = debug_as_info
 
@@ -38,7 +38,7 @@ class PyscriptInterpreter:
             self.log_error(f"{error}")
             return False
 
-    def sleep(self,seconds):
+    def sleep(self, seconds):
         task.sleep(seconds)
 
     def log_info(self, message):
