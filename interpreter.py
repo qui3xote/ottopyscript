@@ -2,6 +2,7 @@ class PyscriptInterpreter:
 
     def __init__(self, log_id=None, debug_as_info=True):
         self.log_id = log_id
+        self.debug_as_info = debug_as_info
 
     def set_state(self,
                   entity_name,
@@ -21,7 +22,7 @@ class PyscriptInterpreter:
             return False
 
     def get_state(self, entity_name):
-        self.log_debug(f"Getting state of {entity_name}")
+        self.log_info(f"Getting state of {entity_name}")
         try:
             value = state.get(entity_name)
             return value
@@ -49,7 +50,7 @@ class PyscriptInterpreter:
         log.warning(f'{self.log_id}: {message}')
 
     def log_debug(self, message):
-        if DEBUG_AS_INFO:
+        if self.debug_as_info:
             log.info(f'{self.log_id}: {message}')
         else:
             log.debug(f'{self.log_id}: {message}')
