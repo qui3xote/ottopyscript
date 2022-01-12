@@ -1,23 +1,28 @@
-from ottoscript import *
-
 class PyscriptInterpreter:
 
-    def __init__(self, log_id=None):
+    def __init__(self, log_id=None, debug_as_info=False):
         self.log_id = log_id
+        self.debug_as_info = debug_as_info
 
-    def set_state(self, entity_name, value=None, new_attributes=None, kwargs=None):
+    def set_state(self,
+                  entity_name,
+                  value=None,
+                  new_attributes=None,
+                  kwargs=None):
         try:
             state.set(entity_name, value, new_attributes, **kwargs)
             return True
-        except:
+        except Exception as error:
             self.log_warning(f"Unable to complete operation \
                         state.set(entity_name={entity_name}, \
                         value={value}, \
                         new_attributes={new_attributes}, \
                         kwargs = **{kwargs})")
+            self.log_error(error)
             return False
 
     def get_state(self, entity_name):
+        self.log_info(f"Getting state of {entity_name}")
         try:
             value = state.get(entity_name)
             return value
@@ -28,11 +33,12 @@ class PyscriptInterpreter:
         try:
             service.call(domain, service_name, **kwargs)
             return True
-        except:
+        except Exception as error:
             self.log_warning(f"Unable to complete service.call({domain}, {service_name}, **{kwargs}))")
+            self.log_error(f"{error}")
             return False
 
-    def sleep(self,seconds):
+    def sleep(self, seconds):
         task.sleep(seconds)
 
     def log_info(self, message):
@@ -45,7 +51,7 @@ class PyscriptInterpreter:
         log.warning(f'{self.log_id}: {message}')
 
     def log_debug(self, message):
-        if DEBUG_AS_INFO:
+        if self.debug_as_info:
             log.info(f'{self.log_id}: {message}')
         else:
             log.debug(f'{self.log_id}: {message}')

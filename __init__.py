@@ -1,28 +1,17 @@
 import sys
 import os
 from importlib import reload
-import asyncio
 import pathlib
-from pyparsing import *
 from ottopyscript.interpreter import PyscriptInterpreter
+sys.path.append("/config/ottoscript")
+
+import ottoscript
+reload(ottoscript)
+
+from ottoscript import OttoScript
 
 SHOW_TASK_NAME = False
 DEBUG_AS_INFO = True
-
-if sys.executable == '/usr/local/Cellar/jupyterlab/3.2.4/libexec/bin/python3.9':
-    ENVIRONMENT = 'DEV'
-    sys.path.append("./ottoscript")
-    interpreter = TestInterpreter
-else:
-    ENVIRONMENT = 'PROD'
-    sys.path.append("/config/ottoscript")
-    interpreter = PyscriptInterpreter
-
-if 'ottoscript' in sys.modules:
-    import ottoscript
-    reload(ottoscript)
-
-from ottoscript import OttoScript
 
 registered_triggers = []
 
@@ -37,9 +26,9 @@ class OttoBuilder:
             scripts = task.executor(load_file, f)
             for script in scripts.split(";"):
                 log.info(f"{script}")
-                automation = OttoScript(interpreter(f), script)
+                intrprtr = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
+                automation = OttoScript(intrprtr, script)
                 registered_triggers.append(self.build_automation(automation))
-
 
     def parse_config(self, data):
         path = data.get('directory')
@@ -64,10 +53,11 @@ class OttoBuilder:
         return automation_func
 
 
-########################   Helpers #############################
+# Helpers
 @pyscript_compile
 def fileexists(path):
     return os.path.isfile(path)
+
 
 @pyscript_compile
 def get_files(path):
@@ -78,12 +68,14 @@ def get_files(path):
                 files.append(os.path.join(path, f))
     return files
 
+
 @pyscript_compile
 def load_file(path):
     with open(path) as f:
         contents = f.read()
 
     return contents
+
 
 @time_trigger('startup')
 def startup():
