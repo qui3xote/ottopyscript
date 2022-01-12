@@ -19,6 +19,7 @@ WHEN input_boolean.sleep CHANGES TO 'on'
    THEN
      TURN OFF lights.porch_sconce_lights
      LOCK lock.entry
+  END
 ```
 
 ### Writability
@@ -38,11 +39,12 @@ OttoScript will support area-based entity shorthand. For example,
 OttoScript is designed to scale to highly complex
 automations and offers features for power users
 such as:
- - complex conditions ('if sun is down and porch.lights != 'on')
+- compound IF statements ('if sun is down and porch.lights != 'on')
+- CASE Statement
+- variable assignment ('set @color = 'red')
 
 _Future Release_:
-- variable assignment ('set @color = 'red')
-- Advanced logic (CASE, FOR loops)
+- Advanced logic (FOR loops)
 - user-defined functions for frequently used code
 - Ability to call pyscript functions directly from OttoScripts
 
@@ -59,7 +61,7 @@ relies on pyscript.
 4. Create a directory to store your ottoscripts and add it to the pyscript configuration (see config.yaml.sample in this repo) - alternately, you can keep a seperate config.yaml in `/config/pyscript/app/ottopyscript` and include it in your pyscript config.
 
 ## Usage
-Ottopyscript will import all `.otto` files in the specified directory (or directories) though it does not (currently) include sub-directories. All scripts therein will be parsed and added as automations. See the [ottoscript](https://github.com/qui3xote/ottoscript) repository for details on the language.
+Ottopyscript will import all `.otto` files in the specified directory (or directories) though it does not (currently) include sub-directories. All scripts in the file will be parsed and added as automations. See the [ottoscript](https://github.com/qui3xote/ottoscript) repository for details on the language.
 
 ## Current limitations
 - Only state-based triggers are currently supported. Time-based and other trigger types will be added in a future release.
