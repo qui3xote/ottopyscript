@@ -1,5 +1,29 @@
 from itertools import product
 
+def state_trigger_factory(string, state_hold, clauses):
+
+    @state_trigger(string, state_hold=state_hold)
+    def otto_state_func(**kwargs):
+        nonlocal clauses
+        log.info("Running")
+        for clause in clauses:
+            log.info(clause.debugtree())
+            clause.eval()
+
+    return otto_state_func
+
+
+def time_trigger_factory(string, clauses):
+
+    @time_trigger(string)
+    def otto_time_func(**kwargs):
+        nonlocal clauses
+        log.info("Running")
+        for clause in clauses:
+            clause.eval()
+
+    return otto_time_func
+
 
 class PyscriptInterpreter:
 
@@ -10,13 +34,14 @@ class PyscriptInterpreter:
                               'time': self.time_trigger
                               }
 
-    async def register(self, trigger, automation):
-        func = self.trigger_funcs[trigger['type']]
-        result = await func(trigger, automation)
+    def register(self, trigger, automation):
+        func = self.trigger_funcs[trigger.type]
+        result = func(trigger, automation)
         return result
 
-    async def state_trigger(self, trigger, clauses):
-        trigger_strings = []
+    def state_trigger(self, trigger, clauses):
+        funcs = []
+        state_hold = trigger.hold_seconds
 
         for name in trigger.entities:
             basestring = []
@@ -29,32 +54,21 @@ class PyscriptInterpreter:
             if len(basestring) == 0:
                 basestring.append(f"{name}")
 
-            trigger_strings.append(" and ".join(basestring))
+            string = " and ".join(basestring)
+            funcs.append(state_trigger_factory(string, state_hold, clauses))
 
-        @state_trigger(*trigger_strings, state_hold=trigger.hold_seconds)
-        def otto_state_func(**kwargs):
-            nonlocal clauses
-            self.log_info("Running")
-            for clause in clauses:
-                clause.eval()
+        return funcs
 
-        return otto_state_func
+    def time_trigger(self, trigger, clauses):
 
-    async def time_trigger(self, trigger, clauses):
+        days = trigger.days
+        times = trigger.times
+        offset = trigger.offset_seconds
+        cproduct = product(days, times)
+        strings = [f"once({x[0]} {x[1]} + {offset}s)" for x in cproduct]
 
-        days = trigger['days']
-        times = trigger['times']
-
-        triggers = [f"once({x[0]} {x[1]})" for x in product(days, times)]
-
-        @time_trigger(*triggers)
-        def otto_time_func(**kwargs):
-            nonlocal clauses
-            self.log_info("Running")
-            for clause in clauses:
-                clause.eval()
-
-        return otto_time_func
+        return [time_trigger_factory(s, clauses) for s in strings]
+        # self.log_info(f"adding {', '.join(triggers)}")
 
     def set_state(self,
                   entity_name,

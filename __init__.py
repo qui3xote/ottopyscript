@@ -26,12 +26,12 @@ class OttoBuilder:
         for f in self._files:
             log.info(f'Reading {f}')
             scripts = task.executor(load_file, f)
-            for script in scripts.split(";"):
+            for script in scripts.split(";")[0:-1]:
                 log.info(f"{script}")
                 intrprtr = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
                 automation = OttoScript(intrprtr, script)
-                automation.parse()
-                funcs = automation.register()
+                #await automation.parse()
+                funcs = [intrprtr.register(t, automation.clauses) for t in automation.triggers]
                 registered_triggers.extend(funcs)
 
     def parse_config(self, data):
