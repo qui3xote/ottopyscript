@@ -62,9 +62,6 @@ class OttoBuilder:
         wrapped = trigger_dict[trigger.trigger_type](func)
         return wrapped
 
-    def state_trigger(self):
-
-
 
 # Helpers
 @pyscript_compile
