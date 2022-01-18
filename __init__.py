@@ -15,7 +15,9 @@ DEBUG_AS_INFO = True
 
 registered_triggers = []
 
+
 class OttoBuilder:
+
     def __init__(self, config):
         if not self.parse_config(config):
             log.error(f'INVALID CONFIG {config}')
@@ -28,7 +30,9 @@ class OttoBuilder:
                 log.info(f"{script}")
                 intrprtr = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
                 automation = OttoScript(intrprtr, script)
-                registered_triggers.append(self.build_automation(automation))
+                automation.parse()
+                funcs = automation.register()
+                registered_triggers.extend(funcs)
 
     def parse_config(self, data):
         path = data.get('directory')
@@ -39,18 +43,27 @@ class OttoBuilder:
             try:
                 self._files = task.executor(get_files, path)
                 return True
-            except:
-                log.error(f'Unable to read files from {path}')
+            except Exception as error:
+                log.error(f'Unable to read files from {path}. Error: {error}')
                 return False
 
     def build_automation(self, automation):
-        @state_trigger(f"{automation.trigger}")
-        def automation_func():
+
+        def otto_func():
             nonlocal automation
             log.info(f"Running {type(automation)}")
-            automation.execute()
+            automation.eval()
 
-        return automation_func
+        return otto_func
+
+    def wrap(self, trigger, func):
+        trigger_dict = {'state_change': self.state_trigger,
+                        'time': self.time_trigger}
+        wrapped = trigger_dict[trigger.trigger_type](func)
+        return wrapped
+
+    def state_trigger(self):
+
 
 
 # Helpers
