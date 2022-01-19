@@ -30,7 +30,7 @@ class OttoBuilder:
             for script in scripts.split(";")[0:-1]:
                 log.info(f"{script}")
                 interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
-                automation = OttoScript(interpreter, script)
+                automation = OttoScript(script)
                 interpreter.set_controls(automation.controls)
                 for t in automation.triggers:
                     func = interpreter.register(t, automation.clauses)

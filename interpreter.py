@@ -1,7 +1,7 @@
 from itertools import product
 
 
-def state_trigger_factory(name, string, hold, clauses,
+def state_trigger_factory(interpreter, name, string, hold, clauses,
                           trigger_var="@trigger", kill_me=False):
 
     @task_unique(name, kill_me=kill_me)
@@ -9,35 +9,39 @@ def state_trigger_factory(name, string, hold, clauses,
     def otto_state_func(**kwargs):
         nonlocal clauses
         nonlocal trigger_var
+        nonlocal interpreter
         for c in clauses:
             c.set_vars({trigger_var: kwargs})
         log.info("Running")
         for clause in clauses:
-            clause.eval()
+            clause.eval(interpreter)
 
     return otto_state_func
 
 
-def time_trigger_factory(name, string, clauses, trigger_var, kill_me=False):
+def time_trigger_factory(interpreter, name, string, clauses,
+                         trigger_var, kill_me=False):
 
     @task_unique(name, kill_me=kill_me)
     @time_trigger(string)
     def otto_time_func(**kwargs):
         nonlocal clauses
         nonlocal trigger_var
+        nonlocal interpreter
         for c in clauses:
             c.set_vars({trigger_var: kwargs})
         log.info("Running")
         for clause in clauses:
-            clause.eval()
+            clause.eval(interpreter)
 
     return otto_time_func
 
 
 class PyscriptInterpreter:
 
-    def __init__(self, log_id=None, debug_as_info=False):
+    def __init__(self, log_id=None, debug_as_info=True):
         self.log_id = log_id
+        self.name = None
         self.debug_as_info = debug_as_info
         self.trigger_funcs = {'state': self.state_trigger,
                               'time': self.time_trigger
@@ -75,7 +79,8 @@ class PyscriptInterpreter:
                 basestring.append(f"{name}")
 
             string = " and ".join(basestring)
-            funcs.append(state_trigger_factory(self.name,
+            funcs.append(state_trigger_factory(self,
+                                               self.name,
                                                string,
                                                state_hold,
                                                clauses,
@@ -93,7 +98,8 @@ class PyscriptInterpreter:
         cproduct = product(days, times)
         strings = [f"once({x[0]} {x[1]} + {offset}s)" for x in cproduct]
 
-        return [time_trigger_factory(self.name,
+        return [time_trigger_factory(self,
+                                     self.name,
                                      s,
                                      clauses,
                                      self.trigger_var,
