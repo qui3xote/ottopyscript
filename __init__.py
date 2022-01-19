@@ -31,6 +31,7 @@ class OttoBuilder:
                 log.info(f"{script}")
                 intrprtr = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
                 automation = OttoScript(intrprtr, script)
+                interpreter.set_controls(automation.controls)
                 for t in automation.triggers:
                     func = intrprtr.register(t, automation.clauses)
                     registered_triggers.extend(func)
