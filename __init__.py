@@ -1,7 +1,7 @@
 import sys
 import os
 import pathlib
-from helpers import py_reload
+from ottopyscript.helpers import py_reload
 from ottopyscript.interpreter import PyscriptInterpreter
 sys.path.append("/config/ottoscript")
 
