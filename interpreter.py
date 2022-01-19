@@ -140,17 +140,20 @@ class PyscriptInterpreter:
     def sleep(self, seconds):
         task.sleep(seconds)
 
+    def format_message(self, message):
+        return f"{self.log_id}|{self.name}: {message}"
+
     def log_info(self, message):
-        log.info(f'{self.log_id}: {message}')
+        log.info(self.format_message(message))
 
     def log_error(self, message):
-        log.error(f'{self.log_id}: {message}')
+        log.error(self.format_message(message))
 
     def log_warning(self, message):
-        log.warning(f'{self.log_id}: {message}')
+        log.warning(self.format_message(message))
 
     def log_debug(self, message):
         if self.debug_as_info:
-            log.info(f'{self.log_id}: {message}')
+            log.info(self.format_message(message))
         else:
-            log.debug(f'{self.log_id}: {message}')
+            log.debug(self.format_message(message))
