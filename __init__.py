@@ -1,16 +1,11 @@
 import sys
 import os
-from importlib import reload
 import pathlib
+from helpers import py_reload
 from ottopyscript.interpreter import PyscriptInterpreter
 sys.path.append("/config/ottoscript")
 
 import ottoscript
-
-@pyscript_compile
-def py_reload(module):
-    reload(module)
-    return module
 
 py_reload(ottoscript)
 
