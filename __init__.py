@@ -30,9 +30,9 @@ class OttoBuilder:
                 log.info(f"{script}")
                 intrprtr = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
                 automation = OttoScript(intrprtr, script)
-                #await automation.parse()
-                funcs = [intrprtr.register(t, automation.clauses) for t in automation.triggers]
-                registered_triggers.extend(funcs)
+                for t in automation.triggers:
+                    func = intrprtr.register(t, automation.clauses)
+                    registered_triggers.extend(func)
 
     def parse_config(self, data):
         path = data.get('directory')

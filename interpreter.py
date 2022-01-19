@@ -1,10 +1,15 @@
 from itertools import product
 
-def state_trigger_factory(string, state_hold, clauses):
 
-    @state_trigger(string, state_hold=state_hold)
+def state_trigger_factory(name, string, hold, clauses,
+                          trigger_var="@trigger", kill_me=False):
+
+    @task_unique(name, kill_me=kill_me)
+    @state_trigger(string, state_hold=hold)
     def otto_state_func(**kwargs):
         nonlocal clauses
+        nonlocal trigger_var
+        clauses = [c.set_vars({trigger_var: kwargs}) for c in clauses]
         log.info("Running")
         for clause in clauses:
             log.info(clause.debugtree())
@@ -13,11 +18,14 @@ def state_trigger_factory(string, state_hold, clauses):
     return otto_state_func
 
 
-def time_trigger_factory(string, clauses):
+def time_trigger_factory(name, string, clauses, trigger_var, kill_me=False):
 
+    @task_unique(name, kill_me=kill_me)
     @time_trigger(string)
     def otto_time_func(**kwargs):
         nonlocal clauses
+        nonlocal trigger_var
+        clauses = [c.set_vars({trigger_var: kwargs}) for c in clauses]
         log.info("Running")
         for clause in clauses:
             clause.eval()
@@ -33,6 +41,17 @@ class PyscriptInterpreter:
         self.trigger_funcs = {'state': self.state_trigger,
                               'time': self.time_trigger
                               }
+        self.set_controls()
+
+    def set_controls(self, controller=None):
+        if controller is None:
+            self.name = self.log_id
+            self.trigger_var = '@trigger'
+            self.restart = False
+        else:
+            self.name = controller.name
+            self.restart = controller.restart
+            self.trigger_var = controller.trigger_var
 
     def register(self, trigger, automation):
         func = self.trigger_funcs[trigger.type]
@@ -55,7 +74,13 @@ class PyscriptInterpreter:
                 basestring.append(f"{name}")
 
             string = " and ".join(basestring)
-            funcs.append(state_trigger_factory(string, state_hold, clauses))
+            funcs.append(state_trigger_factory(self.name,
+                                               string,
+                                               state_hold,
+                                               clauses,
+                                               self.trigger_var,
+                                               self.restart
+                                               ))
 
         return funcs
 
@@ -67,7 +92,11 @@ class PyscriptInterpreter:
         cproduct = product(days, times)
         strings = [f"once({x[0]} {x[1]} + {offset}s)" for x in cproduct]
 
-        return [time_trigger_factory(s, clauses) for s in strings]
+        return [time_trigger_factory(self.name,
+                                     s,
+                                     clauses,
+                                     self.trigger_var,
+                                     self.restart) for s in strings]
         # self.log_info(f"adding {', '.join(triggers)}")
 
     def set_state(self,
