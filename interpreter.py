@@ -9,10 +9,10 @@ def state_trigger_factory(name, string, hold, clauses,
     def otto_state_func(**kwargs):
         nonlocal clauses
         nonlocal trigger_var
-        clauses = [c.set_vars({trigger_var: kwargs}) for c in clauses]
+        for c in clauses:
+            c.set_vars({trigger_var: kwargs})
         log.info("Running")
         for clause in clauses:
-            log.info(clause.debugtree())
             clause.eval()
 
     return otto_state_func
@@ -25,7 +25,8 @@ def time_trigger_factory(name, string, clauses, trigger_var, kill_me=False):
     def otto_time_func(**kwargs):
         nonlocal clauses
         nonlocal trigger_var
-        clauses = [c.set_vars({trigger_var: kwargs}) for c in clauses]
+        for c in clauses:
+            c.set_vars({trigger_var: kwargs})
         log.info("Running")
         for clause in clauses:
             clause.eval()
