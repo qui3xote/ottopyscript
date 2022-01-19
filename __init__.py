@@ -6,7 +6,13 @@ from ottopyscript.interpreter import PyscriptInterpreter
 sys.path.append("/config/ottoscript")
 
 import ottoscript
-reload(ottoscript)
+
+@pyscript_compile
+def py_reload(module):
+    reload(module)
+    return module
+
+py_reload(ottoscript)
 
 from ottoscript import OttoScript
 
