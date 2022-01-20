@@ -25,15 +25,22 @@ class OttoBuilder:
             return
 
         for f in self._files:
+            # ensure that each file maintains a separate namespace
+            globals = {}
             log.info(f'Reading {f}')
             scripts = task.executor(load_file, f)
+
             for script in scripts.split(";")[0:-1]:
                 log.info(f"{script}")
                 interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
-                automation = OttoScript(script)
+                automation = OttoScript(script, passed_globals=globals)
+
+                globals.update(automation.global)
                 interpreter.set_controls(automation.controls)
+                interpreter.actions = automation.actions
+
                 for t in automation.triggers:
-                    func = interpreter.register(t, automation.clauses)
+                    func = interpreter.register(t)
                     registered_triggers.extend(func)
 
     def parse_config(self, data):

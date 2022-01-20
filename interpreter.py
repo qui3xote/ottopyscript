@@ -1,62 +1,25 @@
 from itertools import product
 
 
-def state_trigger_factory(interpreter, name, string, hold, clauses,
-                          trigger_var="@trigger", kill_me=False):
-
-    @task_unique(name, kill_me=kill_me)
-    @state_trigger(string, state_hold=hold)
-    def otto_state_func(**kwargs):
-        nonlocal clauses
-        nonlocal trigger_var
-        nonlocal interpreter
-        for c in clauses:
-            c.set_vars({trigger_var: kwargs})
-        log.info("Running")
-        for clause in clauses:
-            clause.eval(interpreter)
-
-    return otto_state_func
-
-
-def time_trigger_factory(interpreter, name, string, clauses,
-                         trigger_var, kill_me=False):
-
-    @task_unique(name, kill_me=kill_me)
-    @time_trigger(string)
-    def otto_time_func(**kwargs):
-        nonlocal clauses
-        nonlocal trigger_var
-        nonlocal interpreter
-        for c in clauses:
-            c.set_vars({trigger_var: kwargs})
-        log.info("Running")
-        for clause in clauses:
-            clause.eval(interpreter)
-
-    return otto_time_func
-
-
 class PyscriptInterpreter:
 
     def __init__(self, log_id=None, debug_as_info=True):
         self.log_id = log_id
-        self.name = None
         self.debug_as_info = debug_as_info
         self.trigger_funcs = {'state': self.state_trigger,
                               'time': self.time_trigger
                               }
-        self.set_controls()
+
+        # Default Values
+        self.name = None
+        self.trigger_var = '@trigger'
+        self.restart = False
+        self.actions = None
 
     def set_controls(self, controller=None):
-        if controller is None:
-            self.name = self.log_id
-            self.trigger_var = '@trigger'
-            self.restart = False
-        else:
-            self.name = controller.name
-            self.restart = controller.restart
-            self.trigger_var = controller.trigger_var
+        self.name = controller.name
+        self.restart = controller.restart
+        self.trigger_var = controller.trigger_var
 
     def register(self, trigger, automation):
         func = self.trigger_funcs[trigger.type]
@@ -79,14 +42,7 @@ class PyscriptInterpreter:
                 basestring.append(f"{name}")
 
             string = " and ".join(basestring)
-            funcs.append(state_trigger_factory(self,
-                                               self.name,
-                                               string,
-                                               state_hold,
-                                               clauses,
-                                               self.trigger_var,
-                                               self.restart
-                                               ))
+            funcs.append(self.state_trigger_factory(string, state_hold))
 
         return funcs
 
@@ -98,13 +54,7 @@ class PyscriptInterpreter:
         cproduct = product(days, times)
         strings = [f"once({x[0]} {x[1]} + {offset}s)" for x in cproduct]
 
-        return [time_trigger_factory(self,
-                                     self.name,
-                                     s,
-                                     clauses,
-                                     self.trigger_var,
-                                     self.restart) for s in strings]
-        # self.log_info(f"adding {', '.join(triggers)}")
+        return [self.time_trigger_factory(s) for s in strings]
 
     def set_state(self,
                   entity_name,
@@ -129,7 +79,7 @@ class PyscriptInterpreter:
             value = state.get(entity_name)
             return value
         except Exception as error:
-            self.log_warning(f"Unable to fetch state of "
+            self.log_warning("Unable to fetch state of "
                              + f"{entity_name}:{error}")
 
     def call_service(self, domain, service_name, kwargs):
@@ -145,6 +95,30 @@ class PyscriptInterpreter:
 
     def sleep(self, seconds):
         task.sleep(seconds)
+
+    def state_trigger_factory(self, string, hold):
+
+        @task_unique(self.name, kill_me=self.restart)
+        @state_trigger(string, state_hold=hold)
+        def otto_state_func(**kwargs):
+            nonlocal self
+            self.log_info(f"Triggered by f{kwargs}")
+            self.actions.update_vars({trigger_var: kwargs})
+            self.actions.eval()
+
+        return otto_state_func
+
+    def time_trigger_factory(self, string):
+
+        @task_unique(name, kill_me=kill_me)
+        @time_trigger(string)
+        def otto_time_func(**kwargs):
+            nonlocal self
+            self.log_info(f"Triggered by f{kwargs}")
+            self.actions.update_vars({trigger_var: kwargs})
+            self.actions.eval()
+
+        return otto_time_func
 
     def format_message(self, message):
         return f"{self.log_id}|{self.name}: {message}"
