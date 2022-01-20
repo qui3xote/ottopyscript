@@ -64,20 +64,20 @@ class OttoBuilder:
                 log.error(f'Unable to read files from {path}. Error: {error}')
                 return False
 
-    def build_automation(self, automation):
-
-        def otto_func():
-            nonlocal automation
-            log.info(f"Running {type(automation)}")
-            automation.eval()
-
-        return otto_func
-
-    def wrap(self, trigger, func):
-        trigger_dict = {'state_change': self.state_trigger,
-                        'time': self.time_trigger}
-        wrapped = trigger_dict[trigger.trigger_type](func)
-        return wrapped
+    # def build_automation(self, automation):
+    #
+    #     def otto_func():
+    #         nonlocal automation
+    #         log.info(f"Running {type(automation)}")
+    #         automation.eval()
+    #
+    #     return otto_func
+    #
+    # def wrap(self, trigger, func):
+    #     trigger_dict = {'state_change': self.state_trigger,
+    #                     'time': self.time_trigger}
+    #     wrapped = trigger_dict[trigger.trigger_type](func)
+    #     return wrapped
 
 
 # Helpers

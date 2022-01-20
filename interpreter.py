@@ -24,7 +24,7 @@ class PyscriptInterpreter:
 
     def register(self, trigger):
         func = self.trigger_funcs[trigger.type]
-        result = func(trigger, automation)
+        result = func(trigger)
         return result
 
     def state_trigger(self, trigger):
