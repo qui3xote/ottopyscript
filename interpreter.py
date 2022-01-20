@@ -22,12 +22,12 @@ class PyscriptInterpreter:
             self.restart = controller.restart
             self.trigger_var = controller.trigger_var
 
-    def register(self, trigger, automation):
+    def register(self, trigger):
         func = self.trigger_funcs[trigger.type]
         result = func(trigger, automation)
         return result
 
-    def state_trigger(self, trigger, clauses):
+    def state_trigger(self, trigger):
         funcs = []
         state_hold = trigger.hold_seconds
 
@@ -47,7 +47,7 @@ class PyscriptInterpreter:
 
         return funcs
 
-    def time_trigger(self, trigger, clauses):
+    def time_trigger(self, trigger):
 
         days = trigger.days
         times = trigger.times
