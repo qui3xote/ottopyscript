@@ -7,6 +7,9 @@ sys.path.append("/config/ottoscript")
 
 import ottoscript
 
+# Force pyscript to reload the ottoscript module.
+# Otherwise, a full hass restart is required to
+# reflect new ottoscript versions
 py_reload(ottoscript)
 
 from ottoscript import OttoScript
@@ -33,9 +36,14 @@ class OttoBuilder:
             for script in scripts.split(";")[0:-1]:
                 log.info(f"{script}")
                 interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
-                automation = OttoScript(script, passed_globals=globals)
+                automation = OttoScript(script, interpreter, passed_globals=globals)
 
-                globals.update(automation.global)
+                # Have the automation update it's globals with any
+                # newly defined vars. Then fetch those updated
+                # definitons and hang on to them for the next script.
+                automation.update_globals(interpreter)
+                globals.update(automation.globals)
+
                 interpreter.set_controls(automation.controls)
                 interpreter.actions = automation.actions
 

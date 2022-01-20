@@ -17,9 +17,10 @@ class PyscriptInterpreter:
         self.actions = None
 
     def set_controls(self, controller=None):
-        self.name = controller.name
-        self.restart = controller.restart
-        self.trigger_var = controller.trigger_var
+        if controller is not None:
+            self.name = controller.name
+            self.restart = controller.restart
+            self.trigger_var = controller.trigger_var
 
     def register(self, trigger, automation):
         func = self.trigger_funcs[trigger.type]
