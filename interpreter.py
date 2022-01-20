@@ -104,7 +104,7 @@ class PyscriptInterpreter:
         def otto_state_func(**kwargs):
             nonlocal self
             self.log_info(f"Triggered by f{kwargs}")
-            self.actions.update_vars({trigger_var: kwargs})
+            self.actions.update_vars({self.trigger_var: kwargs})
             self.actions.eval()
 
         return otto_state_func
@@ -116,7 +116,7 @@ class PyscriptInterpreter:
         def otto_time_func(**kwargs):
             nonlocal self
             self.log_info(f"Triggered by f{kwargs}")
-            self.actions.update_vars({trigger_var: kwargs})
+            self.actions.update_vars({self.trigger_var: kwargs})
             self.actions.eval()
 
         return otto_time_func
