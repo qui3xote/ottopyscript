@@ -42,7 +42,7 @@ class OttoBuilder:
                 # newly defined vars. Then fetch those updated
                 # definitons and hang on to them for the next script.
                 automation.update_globals(interpreter)
-                globals.update(automation.globals)
+                globals.update(automation.global_vars)
 
                 interpreter.set_controls(automation.controls)
                 interpreter.actions = automation.actions
