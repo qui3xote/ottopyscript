@@ -1,12 +1,16 @@
 import sys
 import os
-from importlib import reload
 import pathlib
+from ottopyscript.helpers import py_reload
 from ottopyscript.interpreter import PyscriptInterpreter
 sys.path.append("/config/ottoscript")
 
 import ottoscript
-reload(ottoscript)
+
+# Force pyscript to reload the ottoscript module.
+# Otherwise, a full hass restart is required to
+# reflect new ottoscript versions
+py_reload(ottoscript)
 
 from ottoscript import OttoScript
 
@@ -15,20 +19,37 @@ DEBUG_AS_INFO = True
 
 registered_triggers = []
 
+
 class OttoBuilder:
+
     def __init__(self, config):
         if not self.parse_config(config):
             log.error(f'INVALID CONFIG {config}')
             return
 
         for f in self._files:
+            # ensure that each file maintains a separate namespace
+            globals = {}
             log.info(f'Reading {f}')
             scripts = task.executor(load_file, f)
-            for script in scripts.split(";"):
+
+            for script in scripts.split(";")[0:-1]:
                 log.info(f"{script}")
-                intrprtr = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
-                automation = OttoScript(intrprtr, script)
-                registered_triggers.append(self.build_automation(automation))
+                interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
+                automation = OttoScript(script, passed_globals=globals)
+
+                # Have the automation update it's globals with any
+                # newly defined vars. Then fetch those updated
+                # definitons and hang on to them for the next script.
+                automation.update_globals(interpreter)
+                globals.update(automation.global_vars)
+
+                interpreter.set_controls(automation.controls)
+                interpreter.actions = automation.actions
+
+                for t in automation.triggers:
+                    func = interpreter.register(t)
+                    registered_triggers.extend(func)
 
     def parse_config(self, data):
         path = data.get('directory')
@@ -39,18 +60,24 @@ class OttoBuilder:
             try:
                 self._files = task.executor(get_files, path)
                 return True
-            except:
-                log.error(f'Unable to read files from {path}')
+            except Exception as error:
+                log.error(f'Unable to read files from {path}. Error: {error}')
                 return False
 
-    def build_automation(self, automation):
-        @state_trigger(f"{automation.trigger}")
-        def automation_func():
-            nonlocal automation
-            log.info(f"Running {type(automation)}")
-            automation.execute()
-
-        return automation_func
+    # def build_automation(self, automation):
+    #
+    #     def otto_func():
+    #         nonlocal automation
+    #         log.info(f"Running {type(automation)}")
+    #         automation.eval(self)
+    #
+    #     return otto_func
+    #
+    # def wrap(self, trigger, func):
+    #     trigger_dict = {'state_change': self.state_trigger,
+    #                     'time': self.time_trigger}
+    #     wrapped = trigger_dict[trigger.trigger_type](func)
+    #     return wrapped
 
 
 # Helpers
