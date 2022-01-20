@@ -69,7 +69,7 @@ class OttoBuilder:
     #     def otto_func():
     #         nonlocal automation
     #         log.info(f"Running {type(automation)}")
-    #         automation.eval()
+    #         automation.eval(self)
     #
     #     return otto_func
     #
