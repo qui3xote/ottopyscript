@@ -36,7 +36,7 @@ class OttoBuilder:
             for script in scripts.split(";")[0:-1]:
                 log.info(f"{script}")
                 interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
-                automation = OttoScript(script, interpreter, passed_globals=globals)
+                automation = OttoScript(script, passed_globals=globals)
 
                 # Have the automation update it's globals with any
                 # newly defined vars. Then fetch those updated
