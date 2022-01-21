@@ -9,6 +9,11 @@ class PyscriptInterpreter:
         self.trigger_funcs = {'state': self.state_trigger,
                               'time': self.time_trigger
                               }
+        # area_registry = hass.helpers.area_registry.async_get_registry()
+        # areas = area_registry.async_list_areas()
+        # self.hass_area_ids = [x.id for x in areas]
+        #
+        # self.service_domains = hass.services.async_services().keys()
 
         # Default Values
         self.name = None
@@ -83,7 +88,7 @@ class PyscriptInterpreter:
             self.log_warning("Unable to fetch state of "
                              + f"{entity_name}:{error}")
 
-    def call_service(self, domain, service_name, kwargs):
+    def call_service(self, entity, service_name, kwargs):
         try:
             service.call(domain, service_name, **kwargs)
             return True
