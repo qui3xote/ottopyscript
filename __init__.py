@@ -59,10 +59,12 @@ class OttoBuilder:
         else:
             try:
                 self._files = task.executor(get_files, path)
-                return True
             except Exception as error:
                 log.error(f'Unable to read files from {path}. Error: {error}')
                 return False
+
+        area_domains = data.get("area_domains")
+        log.info(f"{type(area_domains)}: {area_domains}")
 
     # def build_automation(self, automation):
     #
