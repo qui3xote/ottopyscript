@@ -88,7 +88,7 @@ class PyscriptInterpreter:
             self.log_warning("Unable to fetch state of "
                              + f"{entity_name}:{error}")
 
-    def call_service(self, entity, service_name, kwargs):
+    def call_service(self, domain, service_name, kwargs):
         try:
             service.call(domain, service_name, **kwargs)
             return True
