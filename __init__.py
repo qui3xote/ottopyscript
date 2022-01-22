@@ -29,7 +29,7 @@ class OttoBuilder:
 
         for f in self._files:
             # ensure that each file maintains a separate namespace
-            globals = {}
+            globals = {'area_domains': self.area_domains}
             log.info(f'Reading {f}')
             scripts = task.executor(load_file, f)
 
@@ -63,24 +63,10 @@ class OttoBuilder:
                 log.error(f'Unable to read files from {path}. Error: {error}')
                 return False
 
-        area_domains = data.get("area_domains")
-        log.info(f"{type(area_domains)}: {area_domains}")
+        self.area_domains = data.get("area_domains")
+        if self.area_domains is None:
+            self.area_domains = {}
         return True
-
-    # def build_automation(self, automation):
-    #
-    #     def otto_func():
-    #         nonlocal automation
-    #         log.info(f"Running {type(automation)}")
-    #         automation.eval(self)
-    #
-    #     return otto_func
-    #
-    # def wrap(self, trigger, func):
-    #     trigger_dict = {'state_change': self.state_trigger,
-    #                     'time': self.time_trigger}
-    #     wrapped = trigger_dict[trigger.trigger_type](func)
-    #     return wrapped
 
 
 # Helpers
