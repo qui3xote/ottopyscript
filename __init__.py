@@ -33,8 +33,12 @@ class OttoBuilder:
             log.info(f'Reading {f}')
             try:
                 scripts = task.executor(load_file, f)
+            except Exception as error:
+                log.warning(f"Unable to read file: {f}")
+                log.error(error)
 
-                for script in scripts.split(";")[0:-1]:
+            for script in scripts.split(";")[0:-1]:
+                try:
                     log.info(f"{script}")
                     interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
                     automation = OttoScript(script, passed_globals=globals)
@@ -51,9 +55,9 @@ class OttoBuilder:
                     for t in automation.triggers:
                         func = interpreter.register(t)
                         registered_triggers.extend(func)
-            except Exception as error:
-                log.warning("unable to parse, skipping")
-                log.error(error)
+                except Exception as error:
+                    log.warning("Unable to load automation, skipping.")
+                    log.error(error)
 
     def parse_config(self, data):
         path = data.get('directory')
