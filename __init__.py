@@ -65,6 +65,7 @@ class OttoBuilder:
 
         area_domains = data.get("area_domains")
         log.info(f"{type(area_domains)}: {area_domains}")
+        return True
 
     # def build_automation(self, automation):
     #
