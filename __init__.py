@@ -31,25 +31,29 @@ class OttoBuilder:
             # ensure that each file maintains a separate namespace
             globals = {'area_domains': self.area_domains}
             log.info(f'Reading {f}')
-            scripts = task.executor(load_file, f)
+            try:
+                scripts = task.executor(load_file, f)
 
-            for script in scripts.split(";")[0:-1]:
-                log.info(f"{script}")
-                interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
-                automation = OttoScript(script, passed_globals=globals)
+                for script in scripts.split(";")[0:-1]:
+                    log.info(f"{script}")
+                    interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
+                    automation = OttoScript(script, passed_globals=globals)
 
-                # Have the automation update it's globals with any
-                # newly defined vars. Then fetch those updated
-                # definitons and hang on to them for the next script.
-                automation.update_globals(interpreter)
-                globals.update(automation.global_vars)
+                    # Have the automation update it's globals with any
+                    # newly defined vars. Then fetch those updated
+                    # definitons and hang on to them for the next script.
+                    automation.update_globals(interpreter)
+                    globals.update(automation.global_vars)
 
-                interpreter.set_controls(automation.controls)
-                interpreter.actions = automation.actions
+                    interpreter.set_controls(automation.controls)
+                    interpreter.actions = automation.actions
 
-                for t in automation.triggers:
-                    func = interpreter.register(t)
-                    registered_triggers.extend(func)
+                    for t in automation.triggers:
+                        func = interpreter.register(t)
+                        registered_triggers.extend(func)
+            except Exception as error:
+                log.warning("unable to parse, skipping")
+                log.error(error)
 
     def parse_config(self, data):
         path = data.get('directory')
