@@ -29,7 +29,7 @@ class OttoBuilder:
 
         for f in self._files:
             # ensure that each file maintains a separate namespace
-            globals = {'area_domains': self.area_domains}
+            globals = {'area_shortcuts': self.area_shortcuts}
             log.info(f'Reading {f}')
             try:
                 scripts = task.executor(load_file, f)
@@ -71,13 +71,13 @@ class OttoBuilder:
                 log.error(f'Unable to read files from {path}. Error: {error}')
                 return False
 
-        self.area_domains = data.get("area_domains")
-        if self.area_domains is None:
-            self.area_domains = {}
+        self.area_shortcuts = data.get("area_shortcuts")
+        if self.area_shortcuts is None:
+            self.area_shortcuts = {}
 
         if data.get("verbose") is True:
             DEBUG_AS_INFO = True
-            
+
         return True
 
 

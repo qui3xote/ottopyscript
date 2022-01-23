@@ -1,7 +1,7 @@
 ottopyscript:
   - directory: /config/otto/
     verbose: true
-    area_domains:
+    area_shortcuts:
       basement_main:
         - basement_bar
         - media_room
