@@ -80,7 +80,7 @@ class PyscriptInterpreter:
             return False
 
     def get_state(self, entity_name):
-        self.log_info(f"Getting state of {entity_name}")
+        self.log_debug(f"Interpreter: getting state of {entity_name}")
         try:
             value = state.get(entity_name)
             return value
@@ -104,6 +104,8 @@ class PyscriptInterpreter:
 
     def state_trigger_factory(self, string, hold):
 
+        self.log_debug(f"Registering {self.name} with trigger '{string}'")
+
         @task_unique(self.name, kill_me=self.restart)
         @state_trigger(string, state_hold=hold)
         def otto_state_func(**kwargs):
@@ -115,6 +117,7 @@ class PyscriptInterpreter:
         return otto_state_func
 
     def time_trigger_factory(self, string):
+        self.log_debug(f"Registering {self.name} with trigger '{string}'")
 
         @task_unique(name, kill_me=kill_me)
         @time_trigger(string)

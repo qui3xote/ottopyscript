@@ -15,7 +15,7 @@ py_reload(ottoscript)
 from ottoscript import OttoScript
 
 SHOW_TASK_NAME = False
-DEBUG_AS_INFO = True
+DEBUG_AS_INFO = False
 
 registered_triggers = []
 
@@ -74,6 +74,10 @@ class OttoBuilder:
         self.area_domains = data.get("area_domains")
         if self.area_domains is None:
             self.area_domains = {}
+
+        if data.get("verbose") is True:
+            DEBUG_AS_INFO = True
+            
         return True
 
 
