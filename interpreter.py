@@ -1,4 +1,8 @@
 from itertools import product
+from copy import copy
+
+registered_triggers = []
+registered_vars = {}
 
 
 class PyscriptInterpreter:
@@ -90,6 +94,8 @@ class PyscriptInterpreter:
 
     def call_service(self, domain, service_name, kwargs):
         try:
+            message = f"service.call({domain}, {service_name}, **{kwargs})"
+            self.log_debug(message)
             service.call(domain, service_name, **kwargs)
             return True
         except Exception as error:
@@ -105,12 +111,16 @@ class PyscriptInterpreter:
     def state_trigger_factory(self, string, hold):
 
         self.log_debug(f"Registering {self.name} with trigger '{string}'")
+        registered_vars[f"{self.log_id}{self.name}"] = copy(self.actions._vars)
 
         @task_unique(self.name, kill_me=self.restart)
         @state_trigger(string, state_hold=hold)
         def otto_state_func(**kwargs):
             nonlocal self
             self.log_info(f"Triggered by f{kwargs}")
+
+            vars = registered_vars[f"{self.log_id}{self.name}"]
+            self.actions.update_vars(vars)
             self.actions.update_vars({self.trigger_var: kwargs})
             self.actions.eval(self)
 
