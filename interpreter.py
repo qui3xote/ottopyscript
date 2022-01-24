@@ -13,6 +13,7 @@ class PyscriptInterpreter:
         self.trigger_funcs = {'state': self.state_trigger,
                               'time': self.time_trigger
                               }
+        # Saving for later....
         # area_registry = hass.helpers.area_registry.async_get_registry()
         # areas = area_registry.async_list_areas()
         # self.hass_area_ids = [x.id for x in areas]
