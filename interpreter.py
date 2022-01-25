@@ -68,6 +68,7 @@ class PyscriptInterpreter:
         return funcs
 
     def time_trigger(self, trigger):
+        self.log_debug(trigger.debugtree())
         days = trigger.days
         times = trigger.times
         offset = trigger.offset_seconds
