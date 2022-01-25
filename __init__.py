@@ -29,7 +29,7 @@ class OttoBuilder:
 
         for f in self._files:
             # ensure that each file maintains a separate namespace
-            globals = {'area_shortcuts': self.area_shortcuts}
+            stored_globals = {'area_shortcuts': self.area_shortcuts}
             log.info(f'Reading {f}')
             try:
                 scripts = task.executor(load_file, f)
@@ -41,13 +41,13 @@ class OttoBuilder:
                 try:
                     log.info(f"{script}")
                     interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
-                    automation = OttoScript(script, passed_globals=globals)
+                    automation = OttoScript(script, passed_globals=stored_globals)
 
                     # Have the automation update it's globals with any
                     # newly defined vars. Then fetch those updated
                     # definitons and hang on to them for the next script.
                     automation.update_globals(interpreter)
-                    globals.update(automation.global_vars)
+                    stored_globals.update(automation.global_vars)
 
                     interpreter.set_controls(automation.controls)
                     interpreter.actions = automation.actions
