@@ -68,10 +68,9 @@ class PyscriptInterpreter:
         return funcs
 
     def time_trigger(self, trigger):
-        self.log_debug(trigger.debugtree())
-        days = trigger.days
         times = trigger.times
         offset = trigger.offset_seconds
+        days = trigger.days
 
         self.log_debug(f"Registering times:{times} days:{days} offset:{offset}")
         cproduct = product(days, times)
@@ -143,7 +142,7 @@ class PyscriptInterpreter:
     def time_trigger_factory(self, string):
         self.log_debug(f"Registering {self.name} with trigger '{string}'")
 
-        @task_unique(name, kill_me=kill_me)
+        @task_unique(self.name, kill_me=self.restart)
         @time_trigger(string)
         def otto_time_func(**kwargs):
             nonlocal self
