@@ -14,9 +14,6 @@ py_reload(ottoscript)
 
 from ottoscript import OttoScript
 
-SHOW_TASK_NAME = False
-DEBUG_AS_INFO = False
-
 registered_triggers = []
 
 
@@ -40,7 +37,7 @@ class OttoBuilder:
             for script in scripts.split(";")[0:-1]:
                 try:
                     log.info(f"{script}")
-                    interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
+                    interpreter = PyscriptInterpreter(f, debug_as_info=self.debug_as_info)
                     automation = OttoScript(script, passed_globals=stored_globals)
 
                     # Have the automation update it's globals with any
@@ -76,7 +73,9 @@ class OttoBuilder:
             self.area_shortcuts = {}
 
         if data.get("verbose") is True:
-            DEBUG_AS_INFO = True
+            self.debug_as_info = True
+        else:
+            self.debug_as_info = False
 
         return True
 
