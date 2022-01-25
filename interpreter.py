@@ -33,9 +33,18 @@ class PyscriptInterpreter:
             self.trigger_var = controller.trigger_var
 
     def register(self, trigger):
-        func = self.trigger_funcs[trigger.type]
-        result = func(trigger)
-        return result
+        try:
+            func = self.trigger_funcs[trigger.type]
+            result = func(trigger)
+            registered_triggers.extend(result)
+            registered_vars[f"{self.log_id}{self.name}"] \
+                = copy(self.actions._vars)
+            return True
+        except Exception as error:
+            message = f"Unable to register {str(trigger)}"
+            self.log_warning(message)
+            self.log_error(error)
+            return False
 
     def state_trigger(self, trigger):
         funcs = []
@@ -116,7 +125,6 @@ class PyscriptInterpreter:
     def state_trigger_factory(self, string, hold):
 
         self.log_debug(f"Registering {self.name} with trigger '{string}'")
-        registered_vars[f"{self.log_id}{self.name}"] = copy(self.actions._vars)
 
         @task_unique(self.name, kill_me=self.restart)
         @state_trigger(string, state_hold=hold)
@@ -139,6 +147,8 @@ class PyscriptInterpreter:
         def otto_time_func(**kwargs):
             nonlocal self
             self.log_info(f"Triggered by f{kwargs}")
+            vars = registered_vars[f"{self.log_id}{self.name}"]
+            self.actions.update_vars(vars)
             self.actions.update_vars({self.trigger_var: kwargs})
             self.actions.eval(self)
 

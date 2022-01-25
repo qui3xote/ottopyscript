@@ -54,7 +54,7 @@ class OttoBuilder:
                     interpreter.log_debug(f"Registering {len(automation.triggers)} Triggers")
                     for t in automation.triggers:
                         func = interpreter.register(t)
-                        registered_triggers.extend(func)
+                        
                 except Exception as error:
                     log.warning("Unable to load automation, skipping.")
                     log.error(error)
