@@ -43,12 +43,15 @@ class OttoBuilder:
                     # Have the automation update it's globals with any
                     # newly defined vars. Then fetch those updated
                     # definitons and hang on to them for the next script.
+                    interpreter.log_debug("Updating Globals")
                     automation.update_globals(interpreter)
                     stored_globals.update(automation.global_vars)
 
+                    interpreter.log_debug("Setting Controls")
                     interpreter.set_controls(automation.controls)
                     interpreter.actions = automation.actions
 
+                    interpreter.log_debug("Registering Triggers")
                     for t in automation.triggers:
                         func = interpreter.register(t)
                         registered_triggers.extend(func)
