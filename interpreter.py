@@ -53,15 +53,17 @@ class PyscriptInterpreter:
                 basestring.append(f"{name}")
 
             string = " and ".join(basestring)
+            self.log_debug(f"Registering state change: {string} hold:{state_hold}")
             funcs.append(self.state_trigger_factory(string, state_hold))
 
         return funcs
 
     def time_trigger(self, trigger):
-
         days = trigger.days
         times = trigger.times
         offset = trigger.offset_seconds
+
+        self.log_debug(f"Registering times:{times} days:{days} offset:{offset}")
         cproduct = product(days, times)
         strings = [f"once({x[0]} {x[1]} + {offset}s)" for x in cproduct]
 
@@ -73,6 +75,7 @@ class PyscriptInterpreter:
                   new_attributes=None,
                   kwargs=None):
         try:
+            self.log_debug(f"Setting {entity_name} to {value} with {kwargs}")
             state.set(entity_name, value, new_attributes, **kwargs)
             return True
         except Exception as error:
@@ -85,7 +88,7 @@ class PyscriptInterpreter:
             return False
 
     def get_state(self, entity_name):
-        self.log_debug(f"Interpreter: getting state of {entity_name}")
+        self.log_debug(f"Getting state of {entity_name}")
         try:
             value = state.get(entity_name)
             return value
@@ -107,6 +110,7 @@ class PyscriptInterpreter:
             return False
 
     def sleep(self, seconds):
+        self.log_debug(f"Sleeping for {seconds}")
         task.sleep(seconds)
 
     def state_trigger_factory(self, string, hold):
