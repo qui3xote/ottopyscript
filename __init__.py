@@ -51,7 +51,7 @@ class OttoBuilder:
                     interpreter.set_controls(automation.controls)
                     interpreter.actions = automation.actions
 
-                    interpreter.log_debug("Registering Triggers")
+                    interpreter.log_debug(f"Registering {len(automation.triggers)} Triggers")
                     for t in automation.triggers:
                         func = interpreter.register(t)
                         registered_triggers.extend(func)
