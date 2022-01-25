@@ -75,7 +75,7 @@ class OttoBuilder:
         if self.area_shortcuts is None:
             self.area_shortcuts = {}
 
-        if data.get("verbose") is True:
+        if data.get("verbose") == 1:
             self.debug_as_info = True
         else:
             self.debug_as_info = False
