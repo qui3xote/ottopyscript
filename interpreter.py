@@ -82,7 +82,7 @@ class PyscriptInterpreter:
                   entity_name,
                   value=None,
                   new_attributes=None,
-                  kwargs=None):
+                  kwargs={}}):
         try:
             self.log_debug(f"Setting {entity_name} to {value} with {kwargs}")
             state.set(entity_name, value, new_attributes, **kwargs)
