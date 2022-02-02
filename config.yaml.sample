@@ -1,2 +1,42 @@
 ottopyscript:
   - directory: /config/otto/
+    verbose: true
+    area_shortcuts:
+      basement_main:
+        - basement_bar
+        - media_room
+        - basement_game_area
+        - basement_sitting_area
+      basement:
+        - basement_main
+        - wine_cellar
+        - basement_exercise_area
+        - basement_storage_area
+        - basement_patio
+      main_room:
+        - living_room
+        - dining_room
+        - kitchen
+      first_floor:
+        - main_room
+        - entryway
+        - morning_room
+        - den
+      entryway:
+        - front_foyer
+        - mudroom
+        - entry
+        - garage_entry
+        - front_porch
+      master_suite:
+        - master_bedroom
+        - zen_room
+      second_floor:
+        - upstairs_hallway
+        - playroom
+        - kids_hallway
+      exterior:
+        - front_porch
+        - deck
+        - kitchen_porch
+        - basement_patio
