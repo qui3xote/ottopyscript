@@ -3,19 +3,16 @@ import os
 import pathlib
 from ottopyscript.helpers import py_reload
 from ottopyscript.interpreter import Interpreter, Logger, Registrar
-sys.path.append("/config/ottoscript/ottoscript")
+sys.path.append("/config/ottoscript/")
 
-import ottoscript
+# import ottoscript
 
 # Force pyscript to reload the ottoscript module.
 # Otherwise, a full hass restart is required to
 # reflect new ottoscript versions
-py_reload(ottoscript)
+# py_reload(ottoscript)
 
-from ottoscript import Auto
-from ottoscript.ottobase import OttoContext, OttoBase
-SHOW_TASK_NAME = False
-DEBUG_AS_INFO = True
+from ottoscript import Auto, OttoContext, OttoBase
 
 registered_triggers = []
 
