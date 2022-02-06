@@ -2,7 +2,7 @@ import sys
 import os
 import pathlib
 from ottopyscript.helpers import py_reload
-from ottopyscript.interpreter import PyscriptInterpreter
+from ottopyscript.interpreter import Interpreter, Logger, Registrar
 sys.path.append("/config/ottoscript")
 
 import ottoscript
@@ -12,7 +12,7 @@ import ottoscript
 # reflect new ottoscript versions
 py_reload(ottoscript)
 
-from ottoscript import OttoScript
+from ottoscript.ottoscript import Auto
 
 SHOW_TASK_NAME = False
 DEBUG_AS_INFO = True
@@ -32,6 +32,35 @@ class OttoBuilder:
             globals = {}
             log.info(f'Reading {f}')
             scripts = task.executor(load_file, f)
+
+            scripts = file.split(";")[:]
+            scripts = [s for s in scripts if len(s.strip()) > 0]
+            stored_globals = {'area_shortcuts': {"home": ['floor1', 'floor2'], "floor1": ["room1","room2"]}}
+            f = "dir/filename"
+            debug_as_info = True
+
+            logger = PrintLogger(log_id=f, task='otto_main', debug_as_info=debug_as_info)
+            registrar = Registrar(PrintLogger(log_id=f, task='registrar', debug_as_info=debug_as_info))
+            interpreter = TestInterpreter(logger)
+
+            for script in scripts:
+                scriptlogger = PrintLogger(log_id=f, debug_as_info=debug_as_info)
+                script_interpreter = TestInterpreter(scriptlogger)
+                ctx = OttoContext(script_interpreter, scriptlogger)
+                ctx.update_global_vars(stored_globals)
+                OttoBase.set_context(ctx)
+
+                try:
+                    auto = Auto().parse_string(script)[0]
+                except Exception as error:
+                    await logger.log.error(f"FAILED TO PARSE: {script}\n{error}\n")
+
+                try:
+                    await registrar.add(auto.controls, auto.triggers, auto.actions)
+                except Exception as error:
+                    await logger.error(f"Register: {script}\n{error}\n")
+
+                stored_globals = ctx.global_vars
 
             for script in scripts.split(";")[0:-1]:
                 log.info(f"{script}")
@@ -63,21 +92,6 @@ class OttoBuilder:
             except Exception as error:
                 log.error(f'Unable to read files from {path}. Error: {error}')
                 return False
-
-    # def build_automation(self, automation):
-    #
-    #     def otto_func():
-    #         nonlocal automation
-    #         log.info(f"Running {type(automation)}")
-    #         automation.eval(self)
-    #
-    #     return otto_func
-    #
-    # def wrap(self, trigger, func):
-    #     trigger_dict = {'state_change': self.state_trigger,
-    #                     'time': self.time_trigger}
-    #     wrapped = trigger_dict[trigger.trigger_type](func)
-    #     return wrapped
 
 
 # Helpers

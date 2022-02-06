@@ -1,7 +1,7 @@
 pyscript_registry = {}
 
 
-class PrintLogger:
+class PyscriptLogger:
 
     def __init__(self, log_id='test', task=None, debug_as_info=False):
         self.log_id = log_id
@@ -12,54 +12,25 @@ class PrintLogger:
         self.task = task
 
     async def info(self, message):
-        print(f'INFO: {self.log_id} {self.task} {message}')
+        log.info(f'{self.log_id} {self.task} {message}')
 
     async def error(self, message):
-        print(f'ERROR: {self.log_id} {self.task} {message}')
+        log.error(f'{self.log_id} {self.task} {message}')
 
     async def warning(self, message):
-        print(f'WARNING: {self.log_id}  {self.task} {message}')
+        log.warning(f'{self.log_id}  {self.task} {message}')
 
     async def debug(self, message):
         if self.debug_as_info:
-            print(f'DEBUG: {self.log_id}  {self.task} {message}')
+            log.info(f'{self.log_id}  {self.task} {message}')
         else:
-            print(f'DEBUG: {self.log_id}  {self.task} {message}')
+            log.debug(f'{self.log_id}  {self.task} {message}')
 
+    def format_message(self, message):
+        return f"{self.log_id}|{self.name}: {message}"
 
-class Service:
-
-    def call(self, domain, service_name, **kwargs):
-        return {'domain': domain,
-                'service_name': service_name, 'kwargs': kwargs}
-
-
-class State:
-
-    def set(self, entity_name, value=None, new_attributes=None, kwargs=None):
-        return {
-            'entity_name': entity_name,
-            'value': value,
-            'new_attributes': new_attributes,
-            'kwargs': kwargs
-        }
-
-    def get(self, entity_name):
-        if len(entity_name.split('.')) == 2:
-            return entity_name
-        elif len(entity_name.split('.')) == 3:
-            return 1
-
-
-class Task:
-
-    def sleep(self, seconds):
-        return seconds
-
-
-state = State()
-service = Service()
-task = Task()
+    def log_info(self, message):
+        log.info(self.format_message(message))
 
 
 class Registrar:
@@ -142,7 +113,7 @@ def time_trigger_factory(registrar, key, controls, string):
     return otto_time_func
 
 
-class TestInterpreter:
+class Interpreter:
     """Convert ottoscript commands to pyscript commands"""
 
     def __init__(self, logger=None):
