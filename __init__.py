@@ -27,58 +27,42 @@ class OttoBuilder:
             log.error(f'INVALID CONFIG {config}')
             return
 
+        logger = Logger(log_id='main', task='builder', debug_as_info=self.debug_as_info)
+        registrar = Registrar(Logger(log_id='main', task='registrar', debug_as_info=self.debug_as_info))
+
         for f in self._files:
-            # ensure that each file maintains a separate namespace
-            globals = {}
+            stored_globals = {'area_shortcuts': self.area_shortcuts}
+
+            logger.info(f'Reading {f}')
+            try:
+                scripts = task.executor(load_file, f)
+            except Exception as error:
+                log.warning(f"Unable to read file: {f}")
+                log.error(error)
+
             log.info(f'Reading {f}')
             scripts = task.executor(load_file, f)
-
-            scripts = file.split(";")[:]
+            scripts = file.split(";")
             scripts = [s for s in scripts if len(s.strip()) > 0]
-            stored_globals = {'area_shortcuts': {"home": ['floor1', 'floor2'], "floor1": ["room1","room2"]}}
-            f = "dir/filename"
-            debug_as_info = True
-
-            logger = PrintLogger(log_id=f, task='otto_main', debug_as_info=debug_as_info)
-            registrar = Registrar(PrintLogger(log_id=f, task='registrar', debug_as_info=debug_as_info))
-            interpreter = TestInterpreter(logger)
 
             for script in scripts:
-                scriptlogger = PrintLogger(log_id=f, debug_as_info=debug_as_info)
-                script_interpreter = TestInterpreter(scriptlogger)
-                ctx = OttoContext(script_interpreter, scriptlogger)
+                script_logger = Logger(log_id=f, debug_as_info=self.debug_as_info)
+                script_interpreter = Interpreter(scriptlogger)
+                ctx = OttoContext(script_interpreter, script_logger)
                 ctx.update_global_vars(stored_globals)
                 OttoBase.set_context(ctx)
 
                 try:
                     auto = Auto().parse_string(script)[0]
                 except Exception as error:
-                    await logger.log.error(f"FAILED TO PARSE: {script}\n{error}\n")
+                    logger.log.error(f"FAILED TO PARSE: {script}\n{error}\n")
 
                 try:
-                    await registrar.add(auto.controls, auto.triggers, auto.actions)
+                    registrar.add(auto.controls, auto.triggers, auto.actions)
                 except Exception as error:
-                    await logger.error(f"Register: {script}\n{error}\n")
+                    logger.error(f"Register: {script}\n{error}\n")
 
                 stored_globals = ctx.global_vars
-
-            for script in scripts.split(";")[0:-1]:
-                log.info(f"{script}")
-                interpreter = PyscriptInterpreter(f, debug_as_info=DEBUG_AS_INFO)
-                automation = OttoScript(script, passed_globals=globals)
-
-                # Have the automation update it's globals with any
-                # newly defined vars. Then fetch those updated
-                # definitons and hang on to them for the next script.
-                automation.update_globals(interpreter)
-                globals.update(automation.global_vars)
-
-                interpreter.set_controls(automation.controls)
-                interpreter.actions = automation.actions
-
-                for t in automation.triggers:
-                    func = interpreter.register(t)
-                    registered_triggers.extend(func)
 
     def parse_config(self, data):
         path = data.get('directory')
@@ -88,11 +72,18 @@ class OttoBuilder:
         else:
             try:
                 self._files = task.executor(get_files, path)
-                return True
             except Exception as error:
                 log.error(f'Unable to read files from {path}. Error: {error}')
                 return False
 
+        self.area_shortcuts = data.get("area_shortcuts")
+        if self.area_shortcuts is None:
+            self.area_shortcuts = {}
+
+        if data.get("verbose") == 1:
+            self.debug_as_info = True
+        else:
+            self.debug_as_info = False
 
 # Helpers
 @pyscript_compile
