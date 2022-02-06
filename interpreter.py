@@ -1,7 +1,7 @@
 pyscript_registry = {}
 
 
-class PyscriptLogger:
+class Logger:
 
     def __init__(self, log_id='test', task=None, debug_as_info=False):
         self.log_id = log_id
@@ -104,7 +104,7 @@ def state_trigger_factory(registrar, key, controls, string, hold):
 
 def time_trigger_factory(registrar, key, controls, string):
 
-    @task_unique(self.name, kill_me=self.restart)
+    @task_unique(controls.name, kill_me=controls.restart)
     @time_trigger(string)
     async def otto_time_func(**kwargs):
         nonlocal registrar, key

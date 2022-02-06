@@ -3,7 +3,7 @@ import os
 import pathlib
 from ottopyscript.helpers import py_reload
 from ottopyscript.interpreter import Interpreter, Logger, Registrar
-sys.path.append("/config/ottoscript")
+sys.path.append("/config/ottoscript/ottoscript")
 
 import ottoscript
 
@@ -12,8 +12,8 @@ import ottoscript
 # reflect new ottoscript versions
 py_reload(ottoscript)
 
-from ottoscript.ottoscript import Auto
-
+from ottoscript import Auto
+from ottoscript.ottobase import OttoContext, OttoBase
 SHOW_TASK_NAME = False
 DEBUG_AS_INFO = True
 
@@ -41,13 +41,13 @@ class OttoBuilder:
                 log.error(error)
 
             log.info(f'Reading {f}')
-            scripts = task.executor(load_file, f)
+            file = task.executor(load_file, f)
             scripts = file.split(";")
             scripts = [s for s in scripts if len(s.strip()) > 0]
 
             for script in scripts:
                 script_logger = Logger(log_id=f, debug_as_info=self.debug_as_info)
-                script_interpreter = Interpreter(scriptlogger)
+                script_interpreter = Interpreter(script_logger)
                 ctx = OttoContext(script_interpreter, script_logger)
                 ctx.update_global_vars(stored_globals)
                 OttoBase.set_context(ctx)
@@ -55,7 +55,7 @@ class OttoBuilder:
                 try:
                     auto = Auto().parse_string(script)[0]
                 except Exception as error:
-                    logger.log.error(f"FAILED TO PARSE: {script}\n{error}\n")
+                    logger.error(f"FAILED TO PARSE: {script}\n{error}\n")
 
                 try:
                     registrar.add(auto.controls, auto.triggers, auto.actions)
@@ -84,6 +84,8 @@ class OttoBuilder:
             self.debug_as_info = True
         else:
             self.debug_as_info = False
+
+        return True
 
 # Helpers
 @pyscript_compile
