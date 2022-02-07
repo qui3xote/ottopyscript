@@ -160,5 +160,8 @@ class Wrapper:
     def __init__(self, value):
         self.value = value
 
-    def eval(self):
-        return self.value
+    def eval(self, attribute=None):
+        if attribute is None:
+            return self.value
+        else:
+            return self.value[attribute]
