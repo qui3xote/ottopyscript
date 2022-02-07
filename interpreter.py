@@ -61,10 +61,12 @@ class Registrar:
         )
 
         if key not in pyscript_registry:
-            pyscript_registry.update({key: []})
+            pyscript_registry.update({(namespace, name): []})
 
         for trigger in triggers.as_list():
-            self.log.debug(f"Registering {key} with trigger {trigger}")
+            self.log.debug(
+                f"Registering {name} with trigger '{trigger['string']}'."
+            )
 
             if trigger['type'] == 'state':
                 func = state_trigger_factory(
@@ -87,7 +89,10 @@ class Registrar:
 
     async def eval(self, key, kwargs):
         actions = self.registry[key[0]][key[1]]['actions']
-        # actions.ctx.update_vars(kwargs)
+        controls = self.registry[key[0]][key[1]]['controls']
+        actions.ctx.update_vars(kwargs)
+        self.log.debug(f"{controls.name} triggered by {kwargs}")
+        self.log.info(f"Running {controls.name}")
         await actions.eval()
 
 
