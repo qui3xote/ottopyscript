@@ -92,7 +92,7 @@ class Registrar:
     async def eval(self, key, kwargs):
         actions = self.registry[key[0]][key[1]]['actions']
         controls = self.registry[key[0]][key[1]]['controls']
-        actions.ctx.update_vars(kwargs)
+        actions.ctx.update_vars({controls.trigger_var: Wrapper(kwargs)})
         self.log.debug(f"{controls.name} triggered by {kwargs}")
         self.log.info(f"Running {controls.name}")
         await actions.eval()
@@ -154,3 +154,11 @@ class Interpreter:
     async def sleep(self, seconds):
         await self.log.info(f"task.sleep({seconds}))")
         return task.sleep(seconds)
+
+
+class Wrapper:
+    def __init__(self, value):
+        self.value = value
+
+    def eval(self):
+        return self.value
