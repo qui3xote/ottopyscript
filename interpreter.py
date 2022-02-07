@@ -47,6 +47,7 @@ class Registrar:
         key = (namespace, name)
 
         if namespace not in self.registry.keys():
+            self.log.debug(f"Adding {namespace} to registry")
             self.registry[namespace] = {}
 
         self.registry[namespace].update(
@@ -63,6 +64,7 @@ class Registrar:
         if key not in pyscript_registry:
             pyscript_registry.update({(namespace, name): []})
 
+        self.log.debug(f"{name} has triggers {triggers.as_list()}")
         for trigger in triggers.as_list():
             self.log.debug(
                 f"Registering {name} with trigger '{trigger['string']}'."

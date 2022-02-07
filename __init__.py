@@ -32,13 +32,11 @@ class OttoBuilder:
 
             logger.info(f'Reading {f}')
             try:
-                scripts = task.executor(load_file, f)
+                file = task.executor(load_file, f)
             except Exception as error:
                 log.warning(f"Unable to read file: {f}")
                 log.error(error)
 
-            log.info(f'Reading {f}')
-            file = task.executor(load_file, f)
             scripts = file.split(";")
             scripts = [s for s in scripts if len(s.strip()) > 0]
 
@@ -51,11 +49,13 @@ class OttoBuilder:
 
                 try:
                     auto = Auto().parse_string(script)[0]
+                    logger.debug(f"Parsed {auto.controls.name}")
                 except Exception as error:
                     logger.error(f"FAILED TO PARSE: {script}\n{error}\n")
 
                 try:
                     registrar.add(auto.controls, auto.triggers, auto.actions)
+                    logger.debug(f"Registered {auto.controls.name}")
                 except Exception as error:
                     logger.error(f"Register: {script}\n{error}\n")
 
