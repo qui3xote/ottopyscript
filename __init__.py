@@ -23,10 +23,19 @@ class OttoBuilder:
             log.error(f'INVALID CONFIG {config}')
             return
 
-        logger = Logger(log_id='main', task='builder',
-                        debug_as_info=self.debug_as_info)
-        registrar = Registrar(
-            Logger(log_id='main', task='registrar', debug_as_info=self.debug_as_info))
+        logger = Logger(
+            log_id='main',
+            task='builder',
+            debug_as_info=self.debug_as_info
+        )
+
+        registrar_log = Logger(
+            log_id='main',
+            task='registrar',
+            debug_as_info=self.debug_as_info
+        )
+
+        registrar = Registrar(registrar_log)
 
         for f in self._files:
             stored_globals = {'area_shortcuts': self.area_shortcuts}
