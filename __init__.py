@@ -1,7 +1,7 @@
+from ottoscript import Auto, OttoContext, OttoBase
 import sys
 import os
 import pathlib
-from ottopyscript.helpers import py_reload
 from ottopyscript.interpreter import Interpreter, Logger, Registrar
 sys.path.append("/config/ottoscript/")
 
@@ -12,7 +12,6 @@ sys.path.append("/config/ottoscript/")
 # reflect new ottoscript versions
 # py_reload(ottoscript)
 
-from ottoscript import Auto, OttoContext, OttoBase
 
 registered_triggers = []
 
@@ -24,8 +23,10 @@ class OttoBuilder:
             log.error(f'INVALID CONFIG {config}')
             return
 
-        logger = Logger(log_id='main', task='builder', debug_as_info=self.debug_as_info)
-        registrar = Registrar(Logger(log_id='main', task='registrar', debug_as_info=self.debug_as_info))
+        logger = Logger(log_id='main', task='builder',
+                        debug_as_info=self.debug_as_info)
+        registrar = Registrar(
+            Logger(log_id='main', task='registrar', debug_as_info=self.debug_as_info))
 
         for f in self._files:
             stored_globals = {'area_shortcuts': self.area_shortcuts}
@@ -33,6 +34,7 @@ class OttoBuilder:
             logger.info(f'Reading {f}')
             try:
                 file = task.executor(load_file, f)
+                namespace = f.split("/")[-1:][0]
             except Exception as error:
                 log.warning(f"Unable to read file: {f}")
                 log.error(error)
@@ -41,7 +43,10 @@ class OttoBuilder:
             scripts = [s for s in scripts if len(s.strip()) > 0]
 
             for script in scripts:
-                script_logger = Logger(log_id=f, debug_as_info=self.debug_as_info)
+                script_logger = Logger(
+                    log_id=namespace,
+                    debug_as_info=self.debug_as_info
+                )
                 script_interpreter = Interpreter(script_logger)
                 ctx = OttoContext(script_interpreter, script_logger)
                 ctx.update_global_vars(stored_globals)
@@ -49,7 +54,8 @@ class OttoBuilder:
 
                 try:
                     auto = Auto().parse_string(script)[0]
-                    logger.debug(f"Parsed {auto.controls.name}")
+                    auto.ctx.log.set_task(auto.controls.name)
+                    logger.debug(f"Parsed {auto.controls.name}.")
                 except Exception as error:
                     logger.error(f"FAILED TO PARSE: {script}\n{error}\n")
 
@@ -85,6 +91,8 @@ class OttoBuilder:
         return True
 
 # Helpers
+
+
 @pyscript_compile
 def fileexists(path):
     return os.path.isfile(path)

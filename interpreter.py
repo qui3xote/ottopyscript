@@ -9,28 +9,23 @@ class Logger:
         self.task = task
 
     def set_task(self, task):
+        self.info(f"Setting log name to {task}")
         self.task = task
 
-    async def info(self, message):
-        log.info(f'{self.log_id} {self.task} {message}')
+    def info(self, message):
+        log.info(f'{self.log_id}/{self.task} {message}')
 
-    async def error(self, message):
-        log.error(f'{self.log_id} {self.task} {message}')
+    def error(self, message):
+        log.error(f'{self.log_id}/{self.task} {message}')
 
-    async def warning(self, message):
-        log.warning(f'{self.log_id}  {self.task} {message}')
+    def warning(self, message):
+        log.warning(f'{self.log_id}/{self.task} {message}')
 
-    async def debug(self, message):
+    def debug(self, message):
         if self.debug_as_info:
-            log.info(f'{self.log_id}  {self.task} {message}')
+            log.info(f'{self.log_id}/{self.task} {message}')
         else:
-            log.debug(f'{self.log_id}  {self.task} {message}')
-
-    def format_message(self, message):
-        return f"{self.log_id}|{self.name}: {message}"
-
-    def log_info(self, message):
-        log.info(self.format_message(message))
+            log.debug(f'{self.log_id}/{self.task} {message}')
 
 
 class Registrar:
@@ -39,9 +34,9 @@ class Registrar:
     def __init__(self, logger):
         self.log = logger
         self.log.set_task('registrar')
-        self.registry = {}
+        self.registry = pyscript_registry
 
-    async def add(self, controls, triggers, actions):
+    def add(self, controls, triggers, actions):
         namespace = controls.ctx.log.log_id
         name = controls.name
         key = (namespace, name)
@@ -56,13 +51,14 @@ class Registrar:
                 {
                     'actions': actions,
                     'controls': controls,
-                    'triggers': triggers
+                    'triggers': triggers,
+                    'trigger_funcs': []
                 }
             }
         )
 
-        if key not in pyscript_registry:
-            pyscript_registry.update({(namespace, name): []})
+        # if key not in pyscript_registry:
+        #     pyscript_registry.update({(namespace, name): []})
 
         self.log.debug(f"{name} has triggers {triggers.as_list()}")
         for trigger in triggers.as_list():
@@ -87,24 +83,25 @@ class Registrar:
                     trigger['string']
                 )
 
-            pyscript_registry[key].append(func)
+            self.registry[namespace][name]['trigger_funcs'].append(func)
+            # pyscript_registry[key].append(func)
 
-    async def eval(self, key, kwargs):
+    def eval(self, key, kwargs):
         actions = self.registry[key[0]][key[1]]['actions']
         controls = self.registry[key[0]][key[1]]['controls']
         actions.ctx.update_vars({controls.trigger_var: Wrapper(kwargs)})
         self.log.debug(f"{controls.name} triggered by {kwargs}")
         self.log.info(f"Running {controls.name}")
-        await actions.eval()
+        actions.eval()
 
 
 def state_trigger_factory(registrar, key, controls, string, hold):
 
     @task_unique(controls.name, kill_me=controls.restart)
     @state_trigger(string, state_hold=hold)
-    async def otto_state_func(**kwargs):
+    def otto_state_func(**kwargs):
         nonlocal registrar, key
-        await registrar.eval(key, kwargs)
+        registrar.eval(key, kwargs)
 
     return otto_state_func
 
@@ -113,9 +110,9 @@ def time_trigger_factory(registrar, key, controls, string):
 
     @task_unique(controls.name, kill_me=controls.restart)
     @time_trigger(string)
-    async def otto_time_func(**kwargs):
+    def otto_time_func(**kwargs):
         nonlocal registrar, key
-        await registrar.eval(key, kwargs)
+        registrar.eval(key, kwargs)
 
     return otto_time_func
 
@@ -130,29 +127,34 @@ class Interpreter:
         else:
             self.log = logger
 
-    async def set_state(self, entity_name, value=None,
-                        new_attributes=None, kwargs=None):
+    def set_state(self, entity_name, value=None,
+                  new_attributes=None, kwargs={}):
 
         message = f"state.set(entity_name={entity_name},"
         message += f" value={value},"
         message += f" new_attributes={new_attributes},"
         message += f" kwargs = **{kwargs})"
 
-        await self.log.info(message)
+        self.log.info(message)
 
-        return state.set(entity_name, value, new_attributes, kwargs)
+        return state.set(
+            entity_name,
+            value=value,
+            new_attributes=new_attributes,
+            **kwargs
+        )
 
-    async def get_state(self, entity_name):
-        await self.log.info(f"Getting State of {entity_name}")
+    def get_state(self, entity_name):
+        self.log.debug(f"Getting State of {entity_name}")
         return state.get(entity_name)
 
-    async def call_service(self, domain, service_name, **kwargs):
+    def call_service(self, domain, service_name, **kwargs):
         message = f"service.call({domain}, {service_name}, **{kwargs}))"
-        await self.log.debug(message)
+        self.log.debug(message)
         return service.call(domain, service_name, **kwargs)
 
-    async def sleep(self, seconds):
-        await self.log.info(f"task.sleep({seconds}))")
+    def sleep(self, seconds):
+        self.log.debug(f"task.sleep({seconds}))")
         return task.sleep(seconds)
 
 
@@ -161,6 +163,8 @@ class Wrapper:
         self.value = value
 
     def eval(self, attribute=None):
+        log.info(self.value)
+        log.info(attribute)
         if attribute is None:
             return self.value
         else:
