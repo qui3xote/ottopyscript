@@ -1,20 +1,10 @@
 import sys
 import os
 import pathlib
-from ottopyscript.helpers import py_reload
-from ottopyscript.interpreter import PyscriptInterpreter
-sys.path.append("/config/ottoscript")
+from ottopyscript.interpreter import Interpreter, Logger, Registrar
+sys.path.append("/config/ottoscript/")
+from ottoscript import Auto, OttoContext, OttoBase
 
-import ottoscript
-
-# Force pyscript to reload the ottoscript module.
-# Otherwise, a full hass restart is required to
-# reflect new ottoscript versions
-py_reload(ottoscript)
-
-from ottoscript import OttoScript
-
-registered_triggers = []
 
 
 class OttoBuilder:
@@ -24,40 +14,57 @@ class OttoBuilder:
             log.error(f'INVALID CONFIG {config}')
             return
 
+        logger = Logger(
+            log_id='main',
+            task='builder',
+            debug_as_info=self.debug_as_info
+        )
+
+        registrar_log = Logger(
+            log_id='main',
+            task='registrar',
+            debug_as_info=self.debug_as_info
+        )
+        registrar = Registrar(registrar_log)
+
         for f in self._files:
-            # ensure that each file maintains a separate namespace
             stored_globals = {'area_shortcuts': self.area_shortcuts}
-            log.info(f'Reading {f}')
+
+            logger.info(f'Reading {f}')
             try:
-                scripts = task.executor(load_file, f)
+                file = task.executor(load_file, f)
+                namespace = f.split("/")[-1:][0]
             except Exception as error:
                 log.warning(f"Unable to read file: {f}")
                 log.error(error)
 
-            for script in scripts.split(";")[0:-1]:
+            scripts = file.split(";")
+            scripts = [s for s in scripts if len(s.strip()) > 0]
+
+            for script in scripts:
+                script_logger = Logger(
+                    log_id=namespace,
+                    debug_as_info=self.debug_as_info
+                )
+                script_interpreter = Interpreter(script_logger)
+                ctx = OttoContext(script_interpreter, script_logger)
+                ctx.update_global_vars(stored_globals)
+                OttoBase.set_context(ctx)
+
                 try:
-                    log.info(f"{script}")
-                    interpreter = PyscriptInterpreter(f, debug_as_info=self.debug_as_info)
-                    automation = OttoScript(script, passed_globals=stored_globals)
-
-                    # Have the automation update it's globals with any
-                    # newly defined vars. Then fetch those updated
-                    # definitons and hang on to them for the next script.
-                    interpreter.log_debug("Updating Globals")
-                    automation.update_globals(interpreter)
-                    stored_globals.update(automation.global_vars)
-
-                    interpreter.log_debug("Setting Controls")
-                    interpreter.set_controls(automation.controls)
-                    interpreter.actions = automation.actions
-
-                    interpreter.log_debug(f"Registering {len(automation.triggers)} Triggers")
-                    for t in automation.triggers:
-                        func = interpreter.register(t)
-                        
+                    auto = Auto().parse_string(script)[0]
+                    auto.ctx.log.set_task(auto.controls.name)
+                    logger.debug(f"Parsed {auto.controls.name}.")
                 except Exception as error:
-                    log.warning("Unable to load automation, skipping.")
-                    log.error(error)
+                    logger.error(f"FAILED TO PARSE: {script}\n{error}\n")
+
+                try:
+                    registrar.add(auto.controls, auto.triggers, auto.actions)
+                    logger.debug(f"Registered {auto.controls.name}")
+                except Exception as error:
+                    logger.error(f"Register: {script}\n{error}\n")
+
+                stored_globals = ctx.global_vars
 
     def parse_config(self, data):
         path = data.get('directory')
@@ -82,8 +89,9 @@ class OttoBuilder:
 
         return True
 
-
 # Helpers
+
+
 @pyscript_compile
 def fileexists(path):
     return os.path.isfile(path)
