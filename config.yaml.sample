@@ -6,14 +6,10 @@ ottopyscript:
         - media_room
         - basement_game_area
         - basement_stairs
-      main_room:
-        - living_room
-        - dining_room
-        - kitchen
       first_floor:
-        - main_room
+        - kitchen
         - entryway
-        - den
+        - dining_room
       master_suite:
         - master_bedroom
         - master_bathroom
