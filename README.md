@@ -14,13 +14,16 @@ speaker should be able to follow along. Here's a simple
 example:
 
 ```
+AUTO lockup_at_night
 WHEN input_boolean.sleep CHANGES TO 'on'
   IF person.tom IS 'home'
    THEN
-     TURN OFF lights.porch_sconce_lights
+     TURN OFF LIGHT AREA home
      LOCK lock.entry
   END
 ```
+
+For more language feature documentation, see the [readme here](https://github.com/qui3xote/ottoscript)
 
 ### Writability
 There are very few syntactical rules to OttoScript.
@@ -31,22 +34,13 @@ specify entities, variables are prefixed with '@',
 and multiple scripts can be included in a single file 
 by terminating each one with a semi-colon. 
 
-_Future release_: In addition standard HomeAssistant entities, 
-OttoScript will support area-based entity shorthand. For example,
-`TURN ON porch.lights` will turn on all the lights in the porch area.
-
 ### Scalability
-OttoScript is designed to scale to highly complex
+OttoScript is designed to scale to complex
 automations and offers features for power users
 such as:
 - compound IF statements ('if sun is down and porch.lights != 'on')
 - CASE Statement
-- variable assignment ('set @color = 'red')
-
-_Future Release_:
-- Advanced logic (FOR loops)
-- user-defined functions for frequently used code
-- Ability to call pyscript functions directly from OttoScripts
+- variable assignment ('@color = 'red')
 
 
 ## Installation
@@ -64,6 +58,6 @@ relies on pyscript.
 Ottopyscript will import all `.otto` files in the specified directory (or directories) though it does not (currently) include sub-directories. All scripts in the file will be parsed and added as automations. See the [ottoscript](https://github.com/qui3xote/ottoscript) repository for details on the language.
 
 ## Current limitations
-- Only state-based triggers are currently supported. Time-based and other trigger types will be added in a future release.
-- If you change an otto script, you must reload pyscript before the change will take effect (from the HA interface, this is available in the Server Controls section).
-- Only a small number of commands (turn on/off, toggle, lock/unlock) have been implemented so far.
+- Only state-based and time-based triggers are currently supported. Events/MQTT/Numeric States will come in a future release.
+- If you change an otto script, you must reload pyscript before the change will take effect. From the HA interface, this is available in the Server Controls section - for those who like the command line, touching the config.yaml file will also cause pyscript to reload. 
+- Only a small number of shortcut commands (turn on/off, toggle, lock/unlock) have been implemented so far, but the CALL command can run any HA service, allowing OttoScript to do virtually anything that a YAML automation can.
