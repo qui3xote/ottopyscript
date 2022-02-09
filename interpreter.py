@@ -123,7 +123,7 @@ class Interpreter:
     def __init__(self, logger=None):
 
         if logger is None:
-            self.log = PrintLogger()
+            self.log = Logger()
         else:
             self.log = logger
 
@@ -163,7 +163,7 @@ class Interpreter:
             service.call(domain, service_name, **kwargs)
             return True
         except Exception as error:
-            log.error("Service {message} failed: {error}")
+            log.error(f"Service {message} failed: {error}")
             return False
 
     def sleep(self, seconds):
