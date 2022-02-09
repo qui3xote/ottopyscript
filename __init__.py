@@ -1,12 +1,11 @@
-from ottoscript import Auto, OttoContext, OttoBase
 import sys
 import os
 import pathlib
 from ottopyscript.interpreter import Interpreter, Logger, Registrar
 sys.path.append("/config/ottoscript/")
+from ottoscript.ottoscript import Auto, OttoContext, OttoBase
 
 # import ottoscript
-
 # Force pyscript to reload the ottoscript module.
 # Otherwise, a full hass restart is required to
 # reflect new ottoscript versions
@@ -34,7 +33,6 @@ class OttoBuilder:
             task='registrar',
             debug_as_info=self.debug_as_info
         )
-
         registrar = Registrar(registrar_log)
 
         for f in self._files:

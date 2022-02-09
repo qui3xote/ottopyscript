@@ -137,16 +137,17 @@ class Interpreter:
 
         self.log.info(message)
 
-        return state.set(
-            entity_name,
-            value=value,
-            new_attributes=new_attributes,
-            **kwargs
-        )
+        return state.set(entity_name, value=value, new_attributes=new_attributes, **kwargs)
 
     def get_state(self, entity_name):
-        self.log.debug(f"Getting State of {entity_name}")
-        return state.get(entity_name)
+        try:
+            value = state.get(entity_name)
+            self.log.debug(f"{entity_name} evaluated to {value}")
+            return value
+        except Exception as error:
+            self.log.error(f"Error getting state of {entity_name}: {error}")
+            return None
+
 
     def call_service(self, domain, service_name, **kwargs):
         message = f"service.call({domain}, {service_name}, **{kwargs}))"
