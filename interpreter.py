@@ -135,9 +135,16 @@ class Interpreter:
         message += f" new_attributes={new_attributes},"
         message += f" kwargs = **{kwargs})"
 
-        self.log.info(message)
-
-        return state.set(entity_name, value=value, new_attributes=new_attributes, **kwargs)
+        try:
+            self.log.debug(message)
+            return state.set(
+                entity_name,
+                value=value,
+                new_attributes=new_attributes,
+                **kwargs)
+        except Exception as error:
+            self.log_error(f"Failed to set {entity_name} to {value}: {error}")
+            return False
 
     def get_state(self, entity_name):
         try:
@@ -148,15 +155,21 @@ class Interpreter:
             self.log.error(f"Error getting state of {entity_name}: {error}")
             return None
 
-
     def call_service(self, domain, service_name, **kwargs):
         message = f"service.call({domain}, {service_name}, **{kwargs}))"
-        self.log.debug(message)
-        return service.call(domain, service_name, **kwargs)
+
+        try:
+            self.log.debug(message)
+            service.call(domain, service_name, **kwargs)
+            return True
+        except Exception as error:
+            log.error("Service {message} failed: {error}")
+            return False
 
     def sleep(self, seconds):
         self.log.debug(f"task.sleep({seconds}))")
-        return task.sleep(seconds)
+        task.sleep(seconds)
+        return True
 
 
 class Wrapper:
