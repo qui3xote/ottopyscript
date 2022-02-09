@@ -1,3 +1,4 @@
+
 pyscript_registry = {}
 
 
@@ -142,6 +143,7 @@ class Interpreter:
                 value=value,
                 new_attributes=new_attributes,
                 **kwargs)
+
         except Exception as error:
             self.log_error(f"Failed to set {entity_name} to {value}: {error}")
             return False
@@ -170,7 +172,6 @@ class Interpreter:
         self.log.debug(f"task.sleep({seconds}))")
         task.sleep(seconds)
         return True
-
 
 class Wrapper:
     def __init__(self, value):

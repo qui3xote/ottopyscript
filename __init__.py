@@ -5,11 +5,6 @@ from ottopyscript.interpreter import Interpreter, Logger, Registrar
 sys.path.append("/config/ottoscript/")
 from ottoscript import Auto, OttoContext, OttoBase
 
-# import ottoscript
-# Force pyscript to reload the ottoscript module.
-# Otherwise, a full hass restart is required to
-# reflect new ottoscript versions
-# py_reload(ottoscript)
 
 
 class OttoBuilder:
