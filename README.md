@@ -7,13 +7,13 @@ and more intuitive than existing options, while being
 powerful enough to handle all but the most complex 
 situations.
 
-## Whatis Otto**Py**Script?
+## Whatis OttoPYScript?
 OttoPyScript is the interpreter layer that converts OttoScript commands into HomeAssitant commands (via the PyScript integration). You need both if you want to try OttoScript on HomeAssistant. (A simpler install process *will* be available before 1.0 release). 
 
 ## Installation
 1. [Install Pyscript](https://github.com/custom-components/pyscript) by either HACS (preferred) or manual method. **Be sure to set `allow_all_imports: true` in your pyscript configuration.**
 2. [Install ottoscript](https://github.com/qui3xote/ottoscript) in the `/config/` directory of your HA instance. You can download the folder or use git clone, but make sure the entirety of the repo is in /config/ottoscript/
-3. Clone this repository into `/config/pyscript/apps/`
+3. Clone this repository into `/config/pyscript/apps/` (If this directory doesn't exist, you probably didn't reboot after install pyscript).
 
 
 ## Configuration
