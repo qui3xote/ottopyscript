@@ -1,36 +1,18 @@
 ottopyscript:
-  - directory: /config/otto/
-    verbose: true
-    area_shortcuts:
-      basement_main:
-        - basement_bar
+  - directory: /config/user_scripts/
+    verbose: 0 # setting this to 1 will send more data to the logs for debugging
+    area_shortcuts: # each key is treated like an area and expanded to include all the areas below it.
+      basement:
         - media_room
         - basement_game_area
-        - basement_sitting_area
-      basement:
-        - basement_main
-        - wine_cellar
-        - basement_exercise_area
-        - basement_storage_area
-        - basement_patio
-      main_room:
-        - living_room
-        - dining_room
-        - kitchen
+        - basement_stairs
       first_floor:
-        - main_room
+        - kitchen
         - entryway
-        - morning_room
-        - den
-      entryway:
-        - front_foyer
-        - mudroom
-        - entry
-        - garage_entry
-        - front_porch
+        - dining_room
       master_suite:
         - master_bedroom
-        - zen_room
+        - master_bathroom
       second_floor:
         - upstairs_hallway
         - playroom
@@ -38,5 +20,9 @@ ottopyscript:
       exterior:
         - front_porch
         - deck
-        - kitchen_porch
-        - basement_patio
+      home:
+        - exterior # you can regroup shortcuts to create hierarchy. Just don't create a loop by accident.
+        - first_floor
+        - second_floor
+        - basement
+        - master_suite

@@ -1,173 +1,186 @@
-from itertools import product
-from copy import copy
 
-registered_triggers = []
-registered_vars = {}
+pyscript_registry = {}
 
 
-class PyscriptInterpreter:
+class Logger:
 
-    def __init__(self, log_id=None, debug_as_info=True):
+    def __init__(self, log_id='test', task=None, debug_as_info=False):
         self.log_id = log_id
         self.debug_as_info = debug_as_info
-        self.trigger_funcs = {'state': self.state_trigger,
-                              'time': self.time_trigger
-                              }
-        # Saving for later....
-        # area_registry = hass.helpers.area_registry.async_get_registry()
-        # areas = area_registry.async_list_areas()
-        # self.hass_area_ids = [x.id for x in areas]
-        #
-        # self.service_domains = hass.services.async_services().keys()
+        self.task = task
 
-        # Default Values
-        self.name = None
-        self.trigger_var = '@trigger'
-        self.restart = False
-        self.actions = None
+    def set_task(self, task):
+        self.info(f"Setting log name to {task}")
+        self.task = task
 
-    def set_controls(self, controller=None):
-        if controller is not None:
-            self.name = controller.name
-            self.restart = controller.restart
-            self.trigger_var = controller.trigger_var
+    def info(self, message):
+        log.info(f'{self.log_id}/{self.task} {message}')
 
-    def register(self, trigger):
+    def error(self, message):
+        log.error(f'{self.log_id}/{self.task} {message}')
+
+    def warning(self, message):
+        log.warning(f'{self.log_id}/{self.task} {message}')
+
+    def debug(self, message):
+        if self.debug_as_info:
+            log.info(f'{self.log_id}/{self.task} {message}')
+        else:
+            log.debug(f'{self.log_id}/{self.task} {message}')
+
+
+class Registrar:
+    """Register functions and hold runtime vars"""
+
+    def __init__(self, logger):
+        self.log = logger
+        self.log.set_task('registrar')
+        self.registry = pyscript_registry
+
+    def add(self, controls, triggers, actions):
+        namespace = controls.ctx.log.log_id
+        name = controls.name
+        key = (namespace, name)
+
+        if namespace not in self.registry.keys():
+            self.log.debug(f"Adding {namespace} to registry")
+            self.registry[namespace] = {}
+
+        self.registry[namespace].update(
+            {
+                name:
+                {
+                    'actions': actions,
+                    'controls': controls,
+                    'triggers': triggers,
+                    'trigger_funcs': []
+                }
+            }
+        )
+
+        # if key not in pyscript_registry:
+        #     pyscript_registry.update({(namespace, name): []})
+
+        self.log.debug(f"{name} has triggers {triggers.as_list()}")
+        for trigger in triggers.as_list():
+            self.log.debug(
+                f"Registering {name} with trigger '{trigger['string']}'."
+            )
+
+            if trigger['type'] == 'state':
+                func = state_trigger_factory(
+                    self,
+                    key,
+                    controls,
+                    trigger['string'],
+                    trigger['hold']
+                )
+
+            elif trigger['type'] == 'time':
+                func = time_trigger_factory(
+                    self,
+                    key,
+                    controls,
+                    trigger['string']
+                )
+
+            self.registry[namespace][name]['trigger_funcs'].append(func)
+            # pyscript_registry[key].append(func)
+
+    def eval(self, key, kwargs):
+        actions = self.registry[key[0]][key[1]]['actions']
+        controls = self.registry[key[0]][key[1]]['controls']
+        actions.ctx.update_vars({controls.trigger_var: Wrapper(kwargs)})
+        self.log.debug(f"{controls.name} triggered by {kwargs}")
+        self.log.info(f"Running {controls.name}")
+        actions.eval()
+
+
+def state_trigger_factory(registrar, key, controls, string, hold):
+
+    @task_unique(controls.name, kill_me=controls.restart)
+    @state_trigger(string, state_hold=hold)
+    def otto_state_func(**kwargs):
+        nonlocal registrar, key
+        registrar.eval(key, kwargs)
+
+    return otto_state_func
+
+
+def time_trigger_factory(registrar, key, controls, string):
+
+    @task_unique(controls.name, kill_me=controls.restart)
+    @time_trigger(string)
+    def otto_time_func(**kwargs):
+        nonlocal registrar, key
+        registrar.eval(key, kwargs)
+
+    return otto_time_func
+
+
+class Interpreter:
+    """Convert ottoscript commands to pyscript commands"""
+
+    def __init__(self, logger=None):
+
+        if logger is None:
+            self.log = Logger()
+        else:
+            self.log = logger
+
+    def set_state(self, entity_name, value=None,
+                  new_attributes=None, kwargs={}):
+
+        message = f"state.set(entity_name={entity_name},"
+        message += f" value={value},"
+        message += f" new_attributes={new_attributes},"
+        message += f" kwargs = **{kwargs})"
+
         try:
-            func = self.trigger_funcs[trigger.type]
-            result = func(trigger)
-            registered_triggers.extend(result)
-            registered_vars[f"{self.log_id}{self.name}"] \
-                = copy(self.actions._vars)
-            return True
+            self.log.debug(message)
+            return state.set(
+                entity_name,
+                value=value,
+                new_attributes=new_attributes,
+                **kwargs)
+
         except Exception as error:
-            message = f"Unable to register {str(trigger)}"
-            self.log_warning(message)
-            self.log_error(error)
-            return False
-
-    def state_trigger(self, trigger):
-        funcs = []
-        state_hold = trigger.hold_seconds
-
-        for name in trigger.entities:
-            basestring = []
-            if trigger.new is not None:
-                basestring.append(f"{name} == '{trigger.new}'")
-
-            if trigger.old is not None:
-                basestring.append(f"{name}.old == '{trigger.old}'")
-
-            if len(basestring) == 0:
-                basestring.append(f"{name}")
-
-            string = " and ".join(basestring)
-            self.log_debug(f"Registering state change: {string} hold:{state_hold}")
-            funcs.append(self.state_trigger_factory(string, state_hold))
-
-        return funcs
-
-    def time_trigger(self, trigger):
-        times = trigger.times
-        offset = trigger.offset_seconds
-        days = trigger.days
-
-        self.log_debug(f"Registering times:{times} days:{days} offset:{offset}")
-        cproduct = product(days, times)
-        strings = [f"once({x[0]} {x[1]} + {offset}s)" for x in cproduct]
-
-        return [self.time_trigger_factory(s) for s in strings]
-
-    def set_state(self,
-                  entity_name,
-                  value=None,
-                  new_attributes=None,
-                  kwargs={}):
-        try:
-            self.log_debug(f"Setting {entity_name} to {value} with {kwargs}")
-            state.set(entity_name, value, new_attributes, **kwargs)
-            return True
-        except Exception as error:
-            self.log_warning(f"Unable to complete operation \
-                        state.set(entity_name={entity_name}, \
-                        value={value}, \
-                        new_attributes={new_attributes}, \
-                        kwargs = **{kwargs})")
-            self.log_error(error)
+            self.log_error(f"Failed to set {entity_name} to {value}: {error}")
             return False
 
     def get_state(self, entity_name):
-        self.log_debug(f"Getting state of {entity_name}")
         try:
             value = state.get(entity_name)
+            self.log.debug(f"{entity_name} evaluated to {value}")
             return value
         except Exception as error:
-            self.log_warning("Unable to fetch state of "
-                             + f"{entity_name}:{error}")
+            self.log.error(f"Error getting state of {entity_name}: {error}")
+            return None
 
-    def call_service(self, domain, service_name, kwargs):
+    def call_service(self, domain, service_name, **kwargs):
+        message = f"service.call({domain}, {service_name}, **{kwargs}))"
+
         try:
-            message = f"service.call({domain}, {service_name}, **{kwargs})"
-            self.log_debug(message)
+            self.log.debug(message)
             service.call(domain, service_name, **kwargs)
             return True
         except Exception as error:
-            message = "Unable to complete"
-            message += f"service.call({domain}, {service_name}, **{kwargs}))"
-            self.log_warning(message)
-            self.log_error(f"{error}")
+            log.error(f"Service {message} failed: {error}")
             return False
 
     def sleep(self, seconds):
-        self.log_debug(f"Sleeping for {seconds}")
+        self.log.debug(f"task.sleep({seconds}))")
         task.sleep(seconds)
+        return True
 
-    def state_trigger_factory(self, string, hold):
+class Wrapper:
+    def __init__(self, value):
+        self.value = value
 
-        self.log_debug(f"Registering {self.name} with trigger '{string}'")
-
-        @task_unique(self.name, kill_me=self.restart)
-        @state_trigger(string, state_hold=hold)
-        def otto_state_func(**kwargs):
-            nonlocal self
-            self.log_info(f"Triggered by f{kwargs}")
-
-            vars = registered_vars[f"{self.log_id}{self.name}"]
-            self.actions.update_vars(vars)
-            self.actions.update_vars({self.trigger_var: kwargs})
-            self.actions.eval(self)
-
-        return otto_state_func
-
-    def time_trigger_factory(self, string):
-        self.log_debug(f"Registering {self.name} with trigger '{string}'")
-
-        @task_unique(self.name, kill_me=self.restart)
-        @time_trigger(string)
-        def otto_time_func(**kwargs):
-            nonlocal self
-            self.log_info(f"Triggered by f{kwargs}")
-            vars = registered_vars[f"{self.log_id}{self.name}"]
-            self.actions.update_vars(vars)
-            self.actions.update_vars({self.trigger_var: kwargs})
-            self.actions.eval(self)
-
-        return otto_time_func
-
-    def format_message(self, message):
-        return f"{self.log_id}|{self.name}: {message}"
-
-    def log_info(self, message):
-        log.info(self.format_message(message))
-
-    def log_error(self, message):
-        log.error(self.format_message(message))
-
-    def log_warning(self, message):
-        log.warning(self.format_message(message))
-
-    def log_debug(self, message):
-        if self.debug_as_info:
-            log.info(self.format_message(message))
+    def eval(self, attribute=None):
+        log.info(self.value)
+        log.info(attribute)
+        if attribute is None:
+            return self.value
         else:
-            log.debug(self.format_message(message))
+            return self.value[attribute]
