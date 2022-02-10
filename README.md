@@ -7,7 +7,7 @@ and more intuitive than existing options, while being
 powerful enough to handle all but the most complex 
 situations.
 
-## Whatis OttoPYScript?
+## What is OttoPYScript?
 OttoPyScript is the interpreter layer that converts OttoScript commands into HomeAssitant commands (via the PyScript integration). You need both if you want to try OttoScript on HomeAssistant. (A simpler install process *will* be available before 1.0 release). 
 
 ## Installation
